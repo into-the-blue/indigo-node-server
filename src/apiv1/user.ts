@@ -10,7 +10,7 @@ import {
 
 @JsonController()
 export default class UserController {
-  @Get('/')
+  @Get('/user')
   getAll(): any[] {
     return [];
   }
