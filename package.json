@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npm run clean && npm run build && node -r dotenv/config ./dist/app.js",
-    "dev": "npm run clean && npm run watch & nodemon ./dist/app.js",
+    "dev": "npm run clean && npm run watch & nodemon -r dotenv/config ./dist/app.js",
     "build": "tsc",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch"

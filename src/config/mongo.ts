@@ -8,6 +8,22 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
-import mongoose from 'mongoose'
+import mongoose, { Schema } from 'mongoose';
+import { ObjectId } from 'bson';
 
-const mongo = mongoose.connect(`mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:27017/${process.env.MONGO_DB}`)
+const mongo = mongoose.connect(
+  `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:27017/${process.env.MONGO_DB}`,
+);
+const ApartmentSchema = new Schema({
+  _id: { type: ObjectId },
+});
+
+const StationSchema = new Schema({
+  station_id: { type: Number },
+  line_id: { type: Number },
+  station_name: { type: String },
+  url: { type: String },
+  line_ids: { type: Array },
+  urls: { type: Array },
+  city: { type: String },
+});
