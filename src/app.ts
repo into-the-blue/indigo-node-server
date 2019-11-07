@@ -27,9 +27,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use(async (ctx, next) => {
-  ctx.body = 'What are you looking for?';
-  ctx.status = 404;
-  await next();
+  try {
+    ctx.body = 'What are you looking for?';
+    ctx.status = 404;
+    await next();
+  } catch (err) {
+    console.log('errrrr')
+    ctx.body = 'err';
+  }
 });
 useKoaServer(app, {
   routePrefix: '/api/v1',
