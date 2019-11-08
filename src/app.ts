@@ -16,6 +16,7 @@ import passport from 'koa-passport';
 import cors from '@koa/cors';
 import { useKoaServer } from 'routing-controllers';
 import ApiV1Controller from './apiv1';
+import { Mongo } from './db';
 const PORT = 7000;
 const app = new Koa();
 app.use(cors());
@@ -32,7 +33,7 @@ app.use(async (ctx, next) => {
     ctx.status = 404;
     await next();
   } catch (err) {
-    console.log('errrrr')
+    console.log('errrrr');
     ctx.body = 'err';
   }
 });
@@ -41,6 +42,7 @@ useKoaServer(app, {
   controllers: [...ApiV1Controller],
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  await Mongo.connect();
   console.log(`server is running at http://localhost:${PORT}`);
 });

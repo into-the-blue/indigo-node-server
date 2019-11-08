@@ -7,13 +7,14 @@ import {
   Put,
   Delete,
 } from 'routing-controllers';
-import { Mongo } from '../config';
+import { getMongoManager, getMongoRepository } from 'typeorm';
+import { Line } from '../db/entities';
 
 @JsonController()
 export default class UserController {
   @Get('/')
   getAll = async () => {
-    const res = await Mongo.findLines({});
+    const res = await getMongoRepository(Line).find({});
     return res.length;
   };
 
