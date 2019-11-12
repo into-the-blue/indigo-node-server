@@ -9,3 +9,4 @@
  * -----
  */
 export * from './enableCORS';
+export * from './crypto';

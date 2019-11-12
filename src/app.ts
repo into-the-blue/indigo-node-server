@@ -17,31 +17,59 @@ import cors from '@koa/cors';
 import { useKoaServer } from 'routing-controllers';
 import ApiV1Controller from './apiv1';
 import { Mongo } from './db';
-const PORT = 7000;
+import { setupPassport } from './auth';
+import Router from 'koa-router';
+const router = new Router<Koa.DefaultState, Koa.DefaultContext>();
+
+const PORT = process.env.PORT || 7000;
+
 const app = new Koa();
 app.use(cors());
 app.use(bodyParser());
 // session
-app.keys = ['secret'];
+app.keys = [process.env.SESSION_SECRET];
 app.use(session({}, app));
-app.use(passport.initialize());
-app.use(passport.session());
+// passport
+setupPassport(app);
 
 app.use(async (ctx, next) => {
   try {
+    console.log(ctx.header);
     ctx.body = 'What are you looking for?';
     ctx.status = 404;
     await next();
+    console.log(ctx.isAuthenticated());
   } catch (err) {
-    console.log('errrrr');
-    ctx.body = 'err';
+    console.log('errrrr', err);
+    ctx.body = {
+      code: 404,
+      msg: '412',
+    };
+    ctx.status = 500;
   }
 });
+router.get('/auth', (ctx, next) => {
+  return passport.authenticate(
+    'jwt',
+    { session: true },
+    async (err, user, info, status) => {
+      console.log({
+        err,
+        user,
+        info,
+        status,
+      });
+      return await ctx.login(user);
+      // ctx.body = 'ok';
+    },
+  )(ctx, next);
+});
+app.use(router.routes());
+// app.use(passport.authenticate('jwt'));
 useKoaServer(app, {
   routePrefix: '/api/v1',
   controllers: [...ApiV1Controller],
 });
-
 app.listen(PORT, async () => {
   await Mongo.connect();
   console.log(`server is running at http://localhost:${PORT}`);
