@@ -5,7 +5,7 @@ services:
     container_name: indigo-node-server
     image: meanless/node-alpine
     volumes:
-      - .:/apps/node-server
+      - ./src:/apps/node-server/src
     ports:
       - '7000:7000'
     restart: always
