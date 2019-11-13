@@ -4,27 +4,29 @@ import {
   Body,
   Get,
   Post,
-  Put,
-  Delete,
-} from 'routing-controllers';
-import { getMongoManager, getMongoRepository } from 'typeorm';
-import { Line } from '../db/entities';
+  Ctx,
+} from 'routing-controllers'
+import { getMongoRepository } from 'typeorm'
+import { Line } from '../db/entities'
+import Koa from 'koa'
 
 @JsonController()
 export default class UserController {
   @Get('/')
-  getAll = async () => {
-    const res = await getMongoRepository(Line).find({});
-    return res.length;
-  };
+  async getAll(@Ctx() ctx: Koa.Context) {
+    const res = await getMongoRepository(Line).find({})
+    // return res.length
+    ctx.body = ctx.isAuthenticated()
+    return ctx
+  }
 
   @Get('/users/:id')
   getOne(@Param('id') id: number) {
-    return 'hello';
+    return 'hello'
   }
 
   @Post('/users')
   post(@Body() user: any) {
-    return 'success';
+    return 'success'
   }
 }

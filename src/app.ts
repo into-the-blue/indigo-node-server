@@ -8,46 +8,45 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
-import 'reflect-metadata';
-import Koa from 'koa';
-import bodyParser from 'koa-bodyparser';
-import session from 'koa-session';
-import passport from 'koa-passport';
-import cors from '@koa/cors';
-import { useKoaServer } from 'routing-controllers';
-import ApiV1Controller from './apiv1';
-import { Mongo } from './db';
-import { setupPassport } from './auth';
-import Router from 'koa-router';
-const router = new Router<Koa.DefaultState, Koa.DefaultContext>();
+import 'reflect-metadata'
+import Koa from 'koa'
+import bodyParser from 'koa-bodyparser'
+import session from 'koa-session'
+import passport from 'koa-passport'
+import cors from '@koa/cors'
+import { useKoaServer } from 'routing-controllers'
+import ApiV1Controller from './apiv1'
+import { Mongo } from './db'
+import { setupPassport } from './auth'
+import Router from 'koa-router'
+const router = new Router<Koa.DefaultState, Koa.Context>()
 
-const PORT = process.env.PORT || 7000;
+const PORT = process.env.PORT || 7000
 
-const app = new Koa();
-app.use(cors());
-app.use(bodyParser());
+const app = new Koa<Koa.DefaultState, Koa.Context>()
+app.use(cors())
+app.use(bodyParser())
 // session
-app.keys = [process.env.SESSION_SECRET];
-app.use(session({}, app));
+app.keys = [process.env.SESSION_SECRET]
+app.use(session({}, app))
 // passport
-setupPassport(app);
+setupPassport(app)
 
 app.use(async (ctx, next) => {
   try {
-    console.log(ctx.header);
-    ctx.body = 'What are you looking for?';
-    ctx.status = 404;
-    await next();
-    console.log(ctx.isAuthenticated());
+    ctx.body = 'What are you looking for?'
+    ctx.status = 404
+    await next()
+    console.log(ctx.isAuthenticated())
   } catch (err) {
-    console.log('errrrr', err);
+    console.log('errrrr', err)
     ctx.body = {
       code: 404,
       msg: '412',
-    };
-    ctx.status = 500;
+    }
+    ctx.status = 500
   }
-});
+})
 router.get('/auth', (ctx, next) => {
   return passport.authenticate(
     'jwt',
@@ -58,19 +57,19 @@ router.get('/auth', (ctx, next) => {
         user,
         info,
         status,
-      });
-      return await ctx.login(user);
+      })
+      return await ctx.login(user)
       // ctx.body = 'ok';
-    },
-  )(ctx, next);
-});
-app.use(router.routes());
+    }
+  )(ctx, next)
+})
+app.use(router.routes())
 // app.use(passport.authenticate('jwt'));
 useKoaServer(app, {
   routePrefix: '/api/v1',
   controllers: [...ApiV1Controller],
-});
+})
 app.listen(PORT, async () => {
-  await Mongo.connect();
-  console.log(`server is running at http://localhost:${PORT}`);
-});
+  await Mongo.connect()
+  console.log(`server is running at http://localhost:${PORT}`)
+})
