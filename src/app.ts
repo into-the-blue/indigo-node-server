@@ -18,6 +18,7 @@ import { useKoaServer } from 'routing-controllers'
 import ApiV1Controller from './apiv1'
 import { Mongo } from './db'
 import { setupPassport } from './auth'
+import { graphql } from './config'
 import Router from 'koa-router'
 const router = new Router<Koa.DefaultState, Koa.Context>()
 
@@ -29,19 +30,22 @@ app.use(bodyParser())
 // session
 app.keys = [process.env.SESSION_SECRET]
 app.use(session({}, app))
+
 // passport
 setupPassport(app)
+
+// graphql
+app.use(graphql)
 
 app.use(async (ctx, next) => {
   try {
     ctx.body = 'What are you looking for?'
     ctx.status = 404
     await next()
-    console.log(ctx.isAuthenticated())
   } catch (err) {
     console.log('errrrr', err)
     ctx.body = {
-      code: 404,
+      code:404,
       msg: '412',
     }
     ctx.status = 500

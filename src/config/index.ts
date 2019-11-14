@@ -1,1 +1,1 @@
-export * from './mongo';
+export { default as graphql } from './graphql'

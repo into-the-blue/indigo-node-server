@@ -1,28 +1,44 @@
-import { ConnectionOptions, getConnectionManager, Connection } from 'typeorm';
-import path from 'path';
-import { mongoConfig } from '../config';
-const getOptions = (logging: boolean = true, synchronize: boolean = false) => {
+import { ConnectionOptions, getConnectionManager, Connection } from 'typeorm'
+import path from 'path'
+const { MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB } = process.env
+// configurations of mongo db
+const baseMongoConfig: ConnectionOptions = {
+  type: 'mongodb',
+  port: 27017,
+  username: MONGO_USERNAME,
+  password: MONGO_PASSWORD,
+  host: MONGO_HOST,
+  database: MONGO_DB,
+  authSource: 'admin',
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}
+
+export const getMongoOptions = (
+  logging: boolean = true,
+  synchronize: boolean = false
+) => {
   const options: ConnectionOptions = {
-    ...mongoConfig,
+    ...baseMongoConfig,
     entities: [path.join(__dirname, 'entities', '*.js')],
     synchronize,
     logging,
-  };
-  return options;
-};
+  }
+  return options
+}
 
 export const connect = async () => {
-  const options = getOptions();
-  const manager = getConnectionManager();
-  let connection: Connection;
+  const options = getMongoOptions()
+  const manager = getConnectionManager()
+  let connection: Connection
   if (!manager.has('default')) {
-    connection = manager.create(options);
+    connection = manager.create(options)
   } else {
-    connection = manager.get();
+    connection = manager.get()
   }
   if (!connection.isConnected) {
-    await connection.connect();
+    await connection.connect()
   }
 
-  return connection;
-};
+  return connection
+}
