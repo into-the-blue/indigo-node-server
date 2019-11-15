@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npm run clean && npm run build && node ./dist/app.js",
-    "dev": "npm run clean && npm run watch & nodemon -r dotenv/config ./dist/app.js",
+    "dev": "nodemon  -r dotenv/config --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' ./src/app.ts",
     "build": "tsc",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch"
@@ -60,6 +60,7 @@
     "@types/redis": "^2.8.13",
     "nodemon": "^1.19.4",
     "rimraf": "^3.0.0",
+    "ts-node": "^8.5.0",
     "tslint": "^5.20.1",
     "typescript": "^3.7.2"
   }
