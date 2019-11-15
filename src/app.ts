@@ -19,12 +19,15 @@ import ApiV1Controller from './apiv1'
 import { Mongo } from './db'
 import { setupPassport } from './auth'
 import { graphql } from './config'
+import { createRateLimiter } from './middleware'
 import Router from 'koa-router'
+import helmet from 'koa-helmet'
 const router = new Router<Koa.DefaultState, Koa.Context>()
-
+const rateLimiter = createRateLimiter()
 const PORT = process.env.PORT || 7000
 
 const app = new Koa<Koa.DefaultState, Koa.Context>()
+app.use(helmet())
 app.use(cors())
 app.use(bodyParser())
 // session
@@ -39,16 +42,18 @@ app.use(graphql)
 
 app.use(async (ctx, next) => {
   try {
-    ctx.body = 'What are you looking for?'
-    ctx.status = 404
+    await rateLimiter.consume(ctx.ip)
     await next()
   } catch (err) {
     console.log('errrrr', err)
-    ctx.body = {
-      code:404,
-      msg: '412',
-    }
-    ctx.status = 500
+    // const tooManyRequest = {
+    //   remainingPoints: 0,
+    //   msBeforeNext: 707,
+    //   consumedPoints: 2,
+    //   isFirstInDuration: false,
+    // }
+    ctx.status = 429
+    ctx.body = 'Too Many Requests'
   }
 })
 router.get('/auth', (ctx, next) => {

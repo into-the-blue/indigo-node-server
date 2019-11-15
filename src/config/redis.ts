@@ -8,5 +8,14 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
-import redis from 'redis';
-const client = redis.createClient();
+import redis from 'redis'
+const client = redis.createClient({
+  password: process.env.REDIS_PASSWORD,
+  host: process.env.REDIS_HOST,
+  port: 6379,
+  prefix: 'indigo_node',
+})
+client.on('error', error => {
+  console.log(error)
+})
+export default client
