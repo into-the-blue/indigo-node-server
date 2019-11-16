@@ -20,7 +20,13 @@ export const getMongoOptions = (
 ) => {
   const options: ConnectionOptions = {
     ...baseMongoConfig,
-    entities: [path.join(__dirname, 'entities', '*.js')],
+    entities: [
+      path.join(
+        __dirname,
+        'entities',
+        `*.${process.env.NODE_ENV === 'dev' ? 'ts' : 'js'}`
+      ),
+    ],
     synchronize,
     logging,
   }

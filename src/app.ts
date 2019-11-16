@@ -36,26 +36,24 @@ app.use(session({}, app))
 
 // passport
 setupPassport(app)
-
-// graphql
-app.use(graphql)
-
+// limiter
 app.use(async (ctx, next) => {
   try {
+    console.time(ctx.url)
     await rateLimiter.consume(ctx.ip)
     await next()
   } catch (err) {
     console.log('errrrr', err)
-    // const tooManyRequest = {
-    //   remainingPoints: 0,
-    //   msBeforeNext: 707,
-    //   consumedPoints: 2,
-    //   isFirstInDuration: false,
-    // }
     ctx.status = 429
     ctx.body = 'Too Many Requests'
+  } finally {
+    console.timeEnd(ctx.url)
   }
 })
+
+// graphql
+app.use(graphql)
+
 router.get('/auth', (ctx, next) => {
   return passport.authenticate(
     'jwt',
@@ -73,7 +71,7 @@ router.get('/auth', (ctx, next) => {
   )(ctx, next)
 })
 app.use(router.routes())
-// app.use(passport.authenticate('jwt'));
+// routing controller
 useKoaServer(app, {
   routePrefix: '/api/v1',
   controllers: [...ApiV1Controller],

@@ -2508,7 +2508,7 @@ memory-pager@^1.0.2:
   resolved "https://registry.npm.taobao.org/memory-pager/download/memory-pager-1.5.0.tgz#d8751655d22d384682741c972f2c3d6dfa3e66b5"
   integrity sha1-2HUWVdItOEaCdByXLyw9bfo+ZrU=
 
-methods@^1.0.1:
+methods@^1.0.1, methods@^1.1.2:
   version "1.1.2"
   resolved "https://registry.npm.taobao.org/methods/download/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
   integrity sha1-VSmk1nZUE07cxSZmVoNbD4Ua/O4=
@@ -2996,6 +2996,11 @@ path-to-regexp@^1.1.1:
   integrity sha1-Wf3g9DW62suhA6hOnTvGTpa5k30=
   dependencies:
     isarray "0.0.1"
+
+path-to-regexp@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.npm.taobao.org/path-to-regexp/download/path-to-regexp-5.0.0.tgz#e56dd58778b9dc06e76f0f3e39e741bbddc0bd26"
+  integrity sha1-5W3Vh3i53Abnbw8+OedBu93AvSY=
 
 pause@0.0.1:
   version "0.0.1"

@@ -17,7 +17,7 @@ export default class UserController {
     const res = await getMongoRepository(Line).find({})
     // return res.length
     ctx.body = ctx.isAuthenticated()
-    return ctx
+    return res.length
   }
 
   @Get('/users/:id')
