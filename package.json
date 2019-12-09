@@ -43,7 +43,6 @@
     "reflect-metadata": "^0.1.13",
     "routing-controllers": "^0.8.0",
     "rxjs": "^6.5.2",
-    "sequelize": "^5.10.0",
     "type-graphql": "^0.17.5",
     "typeorm": "^0.2.20"
   },

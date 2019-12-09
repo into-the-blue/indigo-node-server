@@ -8,7 +8,7 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
-import { Sequelize } from 'sequelize';
+// import { Sequelize } from 'sequelize';
 
 // const pg = new Sequelize({
 //   database: process.env.POSTGRES_DB,
