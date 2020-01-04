@@ -5,6 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npm run clean && npm run build && node ./dist/app.js",
+    "start-dev":"npm run clean && npm run build && node -r dotenv/config  ./dist/app.js",
     "dev": "nodemon  -r dotenv/config --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' ./src/app.ts",
     "build": "tsc",
     "clean": "rimraf ./dist",
@@ -15,7 +16,7 @@
   "dependencies": {
     "@koa/cors": "^3.0.0",
     "@types/koa-helmet": "^3.1.2",
-    "apollo-server-koa": "^2.9.8",
+    "apollo-server-koa": "^2.9.15",
     "axios": "^0.19.0",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.11.0",

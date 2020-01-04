@@ -21,7 +21,6 @@ const schema = new GraphQLSchema({
 const typeDefs = gql`
   type Apartment {
     id: ID
-    
   }
   type Query {
     wallo: String
@@ -43,5 +42,5 @@ const apolloConfig: Config = {
   schema,
 }
 const server = new ApolloServer(apolloConfig)
-const middleware = server.getMiddleware()
+const middleware = () => server.getMiddleware()
 export default middleware

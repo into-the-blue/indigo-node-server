@@ -26,7 +26,8 @@ export default class UserController {
   }
 
   @Post('/users')
-  post(@Body() user: any) {
+  post(@Body() body: any, @Ctx() ctx: Koa.Context) {
+    console.log(body)
     return 'success'
   }
 }

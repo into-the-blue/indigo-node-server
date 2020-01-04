@@ -52,7 +52,7 @@ app.use(async (ctx, next) => {
 })
 
 // graphql
-app.use(graphql)
+app.use(graphql())
 
 router.get('/auth', (ctx, next) => {
   return passport.authenticate(

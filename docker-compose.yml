@@ -3,7 +3,7 @@ services:
   node-server:
     build: .
     container_name: indigo-node-server
-    image: meanless/node-alpine
+    image: meanless/indigo-node
     volumes:
       - ./src:/apps/node-server/src
     ports:
