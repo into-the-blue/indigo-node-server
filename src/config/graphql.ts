@@ -42,5 +42,8 @@ const apolloConfig: Config = {
   schema,
 }
 const server = new ApolloServer(apolloConfig)
-const middleware = () => server.getMiddleware()
+const middleware = () =>
+  server.getMiddleware({
+    path: '/graphql',
+  })
 export default middleware

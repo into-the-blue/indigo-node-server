@@ -6,15 +6,14 @@ import {
   Post,
   Ctx,
 } from 'routing-controllers'
-import { getMongoRepository } from 'typeorm'
-import { Line } from '../db/entities'
 import Koa from 'koa'
+import { Mongo } from '../db'
 
 @JsonController()
 export default class UserController {
   @Get('/')
   async getAll(@Ctx() ctx: Koa.Context) {
-    const res = await getMongoRepository(Line).find({})
+    const res = await Mongo.DAO.Line.find({})
     // return res.length
     ctx.body = ctx.isAuthenticated()
     return res.length

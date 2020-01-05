@@ -1,5 +1,15 @@
-import { ConnectionOptions, getConnectionManager, Connection } from 'typeorm'
+import {
+  ConnectionOptions,
+  getConnectionManager,
+  Connection,
+  getMongoRepository,
+} from 'typeorm'
 import path from 'path'
+import {
+  Apartment as ApartmentEntity,
+  Line as LineEntity,
+  Station as StationEntity,
+} from './entities'
 const { MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB } = process.env
 // configurations of mongo db
 const baseMongoConfig: ConnectionOptions = {
@@ -48,3 +58,18 @@ export const connect = async () => {
 
   return connection
 }
+
+export class DAO {
+  static get Apartment() {
+    return getMongoRepository(ApartmentEntity)
+  }
+  static get Line() {
+    return getMongoRepository(LineEntity)
+  }
+  static get Station() {
+    return getMongoRepository(StationEntity)
+  }
+}
+// export const Apartment = getMongoRepository(ApartmentEntity)
+// export const Line = getMongoRepository(LineEntity)
+// export const Station = getMongoRepository(StationEntity)

@@ -20,8 +20,10 @@ import { Mongo } from './db'
 import { setupPassport } from './auth'
 import { graphql } from './config'
 import { createRateLimiter } from './middleware'
+import { setupDashBoard } from './dashboard'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
+
 const router = new Router<Koa.DefaultState, Koa.Context>()
 const rateLimiter = createRateLimiter()
 const PORT = process.env.PORT || 7000
@@ -51,6 +53,9 @@ app.use(async (ctx, next) => {
   }
 })
 
+//dashboard
+setupDashBoard(app)
+
 // graphql
 app.use(graphql())
 
@@ -71,11 +76,14 @@ router.get('/auth', (ctx, next) => {
   )(ctx, next)
 })
 app.use(router.routes())
+
 // routing controller
 useKoaServer(app, {
   routePrefix: '/api/v1',
   controllers: [...ApiV1Controller],
 })
+
+
 app.listen(PORT, async () => {
   await Mongo.connect()
   console.log(`server is running at http://localhost:${PORT}`)
