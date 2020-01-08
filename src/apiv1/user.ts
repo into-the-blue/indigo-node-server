@@ -7,7 +7,7 @@ import {
   Ctx,
 } from 'routing-controllers'
 import Koa from 'koa'
-import { Mongo } from '../db'
+import { Mongo } from '@/db'
 
 @JsonController()
 export default class UserController {

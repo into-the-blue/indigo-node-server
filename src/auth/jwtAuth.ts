@@ -1,4 +1,4 @@
-import { Crypto, Jwt } from '../utils';
+import { Crypto, Jwt } from '@/utils';
 import passport from 'koa-passport';
 import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt';
 

@@ -15,7 +15,7 @@
   "author": "rick yang tongxue",
   "license": "ISC",
   "_moduleAliases": {
-    "~": "./src"
+    "@": "./src"
   },
   "dependencies": {
     "@koa/cors": "^3.0.0",

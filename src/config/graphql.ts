@@ -5,7 +5,7 @@ import {
   GraphQLString,
   GraphQLInt,
 } from 'graphql'
-import { sleep } from '../utils'
+import { sleep } from '@/utils'
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'query',

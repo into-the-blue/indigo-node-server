@@ -5,11 +5,10 @@ import {
   GraphQLString,
   GraphQLInt,
 } from 'graphql'
-import { sleep, toCamelCase } from '../../utils'
 import { from } from 'rxjs'
 import { getMongoRepository } from 'typeorm'
-import { Mongo } from '../../db'
-
+import { Mongo } from '@/db'
+import { sleep, toCamelCase } from '@/utils'
 // const schema = new GraphQLSchema({
 //   query: new GraphQLObjectType({
 //     name: 'query',

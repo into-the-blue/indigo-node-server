@@ -2,7 +2,7 @@ import {
   RateLimiterRedis,
   IRateLimiterStoreOptions,
 } from 'rate-limiter-flexible'
-import { redis } from '../config'
+import { redis } from '@/config'
 
 const defaultOptions: IRateLimiterStoreOptions = {
   storeClient: redis,

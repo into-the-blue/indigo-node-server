@@ -19,7 +19,7 @@ import {
       return res.length
     }
   
-    @Get('/users/:id')
+    @Get('/report/:id')
     getOne(@Param('id') id: number) {
       return 'hello'
     }
