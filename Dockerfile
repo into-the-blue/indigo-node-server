@@ -8,4 +8,6 @@ COPY package.json /apps/node-server/
 
 COPY tsconfig.json /apps/node-server/
 
+COPY scripts/ /apps/node-server/scripts
+
 RUN npm install

@@ -4,10 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npm run clean && npm run build && node ./dist/app.js",
-    "start-dev": "npm run clean && npm run build && node -r dotenv/config  ./dist/app.js",
+    "start": "npm run preRun && npm run clean && npm run build && node ./dist/app.js",
+    "start-dev": "npm run preRun && npm run clean && npm run build && node -r dotenv/config  ./dist/app.js",
     "dev": "nodemon  -r dotenv/config --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' ./src/app.ts",
     "build": "tsc",
+    "preRun": "node ./scripts/setupModuleAlias.js",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch"
   },
