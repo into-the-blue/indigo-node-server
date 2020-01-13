@@ -8,6 +8,7 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
+require('module-alias/register')
 import 'reflect-metadata'
 import Koa from 'koa'
 import bodyParser from 'koa-bodyparser'

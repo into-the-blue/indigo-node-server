@@ -9,8 +9,7 @@
     "dev": "nodemon  -r dotenv/config --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' ./src/app.ts",
     "build": "tsc",
     "clean": "rimraf ./dist",
-    "watch": "tsc --watch",
-    "postinstall": "link-module-alias"
+    "watch": "tsc --watch"
   },
   "author": "rick yang tongxue",
   "license": "ISC",
@@ -35,9 +34,9 @@
     "koa-router": "^7.4.0",
     "koa-session": "^5.12.3",
     "koa-static": "^5.0.0",
-    "link-module-alias": "^1.2.0",
     "lodash": "^4.17.15",
     "methods": "^1.1.2",
+    "module-alias": "^2.2.2",
     "moment": "^2.24.0",
     "mongodb": "^3.3.3",
     "passport-jwt": "^4.0.0",
