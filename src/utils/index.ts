@@ -11,3 +11,4 @@
 export * from './enableCORS'
 export * from './crypto'
 export * from './util'
+export * from './logger'

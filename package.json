@@ -50,7 +50,9 @@
     "routing-controllers": "^0.8.0",
     "rxjs": "^6.5.2",
     "type-graphql": "^0.17.5",
-    "typeorm": "^0.2.20"
+    "typeorm": "^0.2.20",
+    "winston": "^3.2.1",
+    "winston-daily-rotate-file": "^4.4.1"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.28",

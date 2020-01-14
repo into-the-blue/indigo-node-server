@@ -22,9 +22,10 @@ import { setupPassport } from '@/auth'
 import { graphql } from '@/config'
 import { createRateLimiter } from '@/middleware'
 import { setupDashBoard } from '@/dashboard'
+import { logger } from '@/utils'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
-
+const NOT_FOUND_MSG = 'What are you looking for ?'
 const router = new Router<Koa.DefaultState, Koa.Context>()
 const rateLimiter = createRateLimiter()
 const PORT = process.env.PORT || 7000
@@ -39,14 +40,17 @@ app.use(session({}, app))
 
 // passport
 setupPassport(app)
+
 // limiter
 app.use(async (ctx, next) => {
   try {
     console.time(ctx.url)
+    ctx.body = NOT_FOUND_MSG
+    ctx.status = 404
     await rateLimiter.consume(ctx.ip)
     await next()
   } catch (err) {
-    console.log('errrrr', err)
+    logger.info('errrrr', err)
     ctx.status = 429
     ctx.body = 'Too Many Requests'
   } finally {
@@ -65,7 +69,7 @@ router.get('/auth', (ctx, next) => {
     'jwt',
     { session: true },
     async (err, user, info, status) => {
-      console.log({
+      logger.info({
         err,
         user,
         info,
@@ -84,8 +88,7 @@ useKoaServer(app, {
   controllers: [...ApiV1Controller],
 })
 
-
 app.listen(PORT, async () => {
   await Mongo.connect()
-  console.log(`server is running at http://localhost:${PORT}`)
+  logger.info(`server is running at http://localhost:${PORT}`)
 })

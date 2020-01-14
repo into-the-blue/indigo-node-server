@@ -1,175 +1,175 @@
-import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm';
+import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm'
 
 @Entity({ name: 'apartments' })
 export class Apartment {
   @ObjectIdColumn({ name: '_id' })
-  id: ObjectID;
+  id: ObjectID
 
   @Column()
-  type: string;
+  type: string
 
   @Column()
-  title: string;
+  title: string
 
   @Column({ name: 'created_at', type: 'string' })
-  createdAt: string;
+  createdAt: string
 
   @Column({ name: 'house_code', type: 'string' })
-  houseCode: string;
+  houseCode: string
 
   @Column({ name: 'house_id', type: 'string' })
-  houseId: string;
+  houseId: string
 
   @Column({ name: 'city_abbreviation', type: 'string' })
-  cityAbbreviation: string;
+  cityAbbreviation: string
 
   @Column({ name: 'img_urls', type: 'array' })
-  imgUrls: string[];
+  imgUrls: string[]
 
   @Column({ name: 'price', type: 'int' })
-  price: number;
+  price: number
 
   @Column({ name: 'tags', type: 'array' })
-  tags: string[];
+  tags: string[]
 
   @Column({ name: 'house_type', type: 'string', nullable: true })
-  houseType: string;
+  houseType: string
 
   @Column({ name: 'area', type: 'int', nullable: true })
-  area: number;
+  area: number
 
   @Column({ name: 'orient', type: 'string' })
-  orient: string;
+  orient: string
 
   @Column({ name: 'broker_name', type: 'string' })
-  brokerName: string;
+  brokerName: string
 
   @Column({ name: 'broker_contact', type: 'string' })
-  brokerContact: string;
+  brokerContact: string
 
   @Column({ name: 'minimal_lease', type: 'string' })
-  minimalLease: string;
+  minimalLease: string
 
   @Column({ name: 'maximal_lease', type: 'string' })
-  maximalLease: string;
+  maximalLease: string
 
   @Column()
-  floor: string;
+  floor: string
 
   @Column({ name: 'building_total_floors' })
-  buildingTotalFloors: string;
+  buildingTotalFloors: string
 
   @Column()
-  carport: string;
+  carport: string
 
   @Column({ name: 'electricity_type' })
-  electricityType: string;
+  electricityType: string
 
   @Column({ name: 'check_in_date' })
-  checkInDate: string;
+  checkInDate: string
 
   @Column()
-  reservation: string;
+  reservation: string
 
   @Column()
-  elevator: string;
+  elevator: string
 
   @Column()
-  water: string;
+  water: string
 
   @Column()
-  gas: string;
+  gas: string
 
   @Column({ type: 'int' })
-  television: number;
+  television: number
 
   @Column({ type: 'int' })
-  fridge: number;
+  fridge: number
 
   @Column({ name: 'washing_machine', type: 'int' })
-  washingMachine: number;
+  washingMachine: number
 
   @Column({ name: 'air_condition', type: 'int' })
-  airCondition: number;
+  airCondition: number
 
   @Column({ name: 'water_heater', type: 'int' })
-  waterHeater: number;
+  waterHeater: number
 
   @Column({ type: 'int' })
-  bed: number;
+  bed: number
 
   @Column({ type: 'int' })
-  heating: number;
+  heating: number
 
   @Column({ type: 'int' })
-  wifi: number;
+  wifi: number
 
   @Column({ type: 'int' })
-  closet: number;
+  closet: number
 
   @Column({ name: 'naturalGas', type: 'int' })
-  naturalGas: number;
+  naturalGas: number
 
   @Column({ type: 'array' })
-  transportations: object[];
+  transportations: object[]
 
   @Column({ name: 'community_deals' })
-  communityDeals: string;
+  communityDeals: string
 
   @Column({ name: 'house_description' })
-  houseDescription: string;
+  houseDescription: string
 
   @Column({ name: 'house_url' })
-  houseUrl: string;
+  houseUrl: string
 
   @Column()
-  city: string;
+  city: string
 
   @Column()
-  district: string;
+  district: string
 
   @Column()
-  bizcircle: string;
+  bizcircle: string
 
   @Column({ name: 'community_name' })
-  communityName: string;
+  communityName: string
 
   @Column({ name: 'community_url' })
-  communityUrl: string;
+  communityUrl: string
 
   @Column({ name: 'price_per_square_meter', type: 'double' })
-  pricePerSquareMeter: number;
+  pricePerSquareMeter: number
 
   @Column({ name: 'broker_brand' })
-  brokerBrand: string;
+  brokerBrand: string
 
   @Column({ name: 'floor_accessibility', type: 'int' })
-  floorAccessibility: number;
+  floorAccessibility: number
 
   @Column({ name: 'subway_accessibility', type: 'int' })
-  subwayAccessibility: number;
+  subwayAccessibility: number
 
   @Column({ name: 'image_downloaded', type: 'boolean' })
-  imageDownloaded: boolean;
+  imageDownloaded: boolean
 
   @Column({ name: 'geo_info' })
-  geoInfo: object;
+  geoInfo: object
 
   @Column({ type: 'double' })
-  lat: number;
+  lat: number
 
   @Column({ type: 'double' })
-  lng: number;
+  lng: number
 
   @Column({ name: 'line_ids', type: 'array' })
-  lineIds: number[];
+  lineIds: number[]
 
   @Column({ name: 'station_ids', type: 'array' })
-  stationIds: number[];
+  stationIds: number[]
 
   @Column({ name: 'created_time', type: 'date' })
-  createdTime: Date;
+  createdTime: Date
 
   @Column({ name: 'updated_time', type: 'date' })
-  updatedTime: Date;
+  updatedTime: Date
 }
