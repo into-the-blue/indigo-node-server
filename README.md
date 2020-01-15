@@ -1,0 +1,6 @@
+- mongoDB
+- typescript
+- koa
+- routing-controller
+- rxjs
+- graphQL(Apollo)
