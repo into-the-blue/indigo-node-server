@@ -10,7 +10,8 @@
     "build": "tsc",
     "preRun": "node ./scripts/setupModuleAlias.js",
     "clean": "rimraf ./dist",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "clean-logs": "rimraf ./logs"
   },
   "author": "rick yang tongxue",
   "license": "ISC",
@@ -52,7 +53,8 @@
     "type-graphql": "^0.17.5",
     "typeorm": "^0.2.20",
     "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^4.4.1"
+    "winston-daily-rotate-file": "^4.4.1",
+    "winston-transport": "^4.3.0"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.28",

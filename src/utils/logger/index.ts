@@ -1,4 +1,5 @@
 import { createLogger, transports, format } from 'winston'
+import { normalizeMessage } from './custom'
 import DailyRoateFileTransport from 'winston-daily-rotate-file'
 import path from 'path'
 
@@ -7,7 +8,7 @@ type FTOpt = {
   level?: 'info' | 'error'
 }
 
-const LOG_FILE_DIR = path.join(__dirname, '..', '..', 'logs')
+const LOG_FILE_DIR = path.join(__dirname, '..', '..', '..', 'logs')
 
 const consoleTransport = new transports.Console({
   format: format.combine(format.colorize(), format.simple()),
@@ -24,13 +25,17 @@ const genFileTransports = (...opts: FTOpt[]) => {
       maxSize: '20m',
       zippedArchive: true,
       level: opt.level,
-      format: format.json(),
+      format: format.combine(format.json()),
     })
   })
 }
 
 export const logger = createLogger({
-  format: format.combine(format.label({ label: 'INDIGO' }), format.timestamp()),
+  format: format.combine(
+    format.label({ label: 'INDIGO' }),
+    format.timestamp(),
+    normalizeMessage()
+  ),
   transports: [
     ...genFileTransports(
       { filename: 'combined' },

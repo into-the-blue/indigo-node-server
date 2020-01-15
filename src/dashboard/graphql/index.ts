@@ -1,14 +1,13 @@
-import { ApolloServer, gql, Config } from 'apollo-server-koa'
 import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
-  GraphQLInt,
-} from 'graphql'
+  ApolloServer,
+  gql,
+  Config,
+  IResolversParameter,
+} from 'apollo-server-koa'
 import { from } from 'rxjs'
 import { getMongoRepository } from 'typeorm'
 import { Mongo } from '@/db'
-import { sleep, toCamelCase } from '@/utils'
+import { sleep, toCamelCase, logger } from '@/utils'
 // const schema = new GraphQLSchema({
 //   query: new GraphQLObjectType({
 //     name: 'query',
@@ -22,6 +21,12 @@ import { sleep, toCamelCase } from '@/utils'
 // })
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
+  type LabeledApartment {
+    apartmentId: ID
+    houseId: String
+    decoration: String
+  }
+
   type Apartment {
     id: ID
     type: String
@@ -35,8 +40,7 @@ const typeDefs = gql`
     houseType: String
     area: Int
     orient: String
-    minimalLease: String
-    maximalLease: String
+    lease: String
     floor: String
     buildingTotalFloors: Int
     carport: String
@@ -66,7 +70,6 @@ const typeDefs = gql`
     communityName: String
     communityUrl: String
     pricePerSquareMeter: Float
-    brokerBrand: String
     floorAccessibility: Int
     subwayAccessibility: Int
     lat: Float
@@ -75,11 +78,12 @@ const typeDefs = gql`
     stationIds: [Int]
     createdTime: String
     updatedTime: String
+    labeled: [LabeledApartment]
   }
 
   type Query {
     wallo: String
-    fetchApartments: [Apartment]
+    fetchApartments(id: Int): [Apartment]
   }
 `
 
@@ -90,8 +94,13 @@ const resolvers = {
       await sleep(1000)
       return 'Hello world!'
     },
-    fetchApartments: async () => {
-      const data = await Mongo.DAO.Apartment.find({ take: 50 })
+    async fetchApartments(parent, args, ctx) {
+      logger.info(
+        JSON.stringify(parent),
+        JSON.stringify(args),
+        JSON.stringify(ctx)
+      )
+      const data = await Mongo.DAO.Apartment.find({ take: 10 })
       return data.map(toCamelCase)
     },
   },

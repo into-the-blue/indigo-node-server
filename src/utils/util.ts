@@ -29,3 +29,5 @@ const toCase = (processor: Function) => <T>(obj: T): T => {
 export const toCamelCase = toCase(camelCase)
 
 export const toSnakeCase = toCase(snakeCase)
+
+export const isObject = (sth: any) => String(sth) === '[object Object]'
