@@ -14,7 +14,7 @@ const toCase = (processor: Function) => <T>(obj: T): T => {
       const item = _obj[key]
       if (Array.isArray(item)) {
         tmp[processor(key)] = item.map(recursively)
-      } else if (String(item) === '[object Object]') {
+      } else if (isObject(item)) {
         tmp[processor(key)] = recursively(item)
       } else {
         tmp[processor(key)] = item
@@ -23,7 +23,7 @@ const toCase = (processor: Function) => <T>(obj: T): T => {
     return tmp
   }
 
-  if (String(obj) === '[object Object]') return recursively(obj)
+  if (isObject(obj)) return recursively(obj)
 
   return obj
 }
