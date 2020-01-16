@@ -81,7 +81,8 @@ const typeDefs = gql`
   type Query {
     wallo: String
     queryApartments(id: Int): [Apartment]
-    queryApartmentsWithoutLabel: [Apartment]
+    queryApartmentsWithoutLabel(limit: Int): [Apartment]
+    queryApartmentWithLabel(limit: Int): [Apartment]
   }
 `
 
@@ -105,7 +106,37 @@ const resolvers = {
       return data.map(toCamelCase)
     },
 
+    async queryApartmentWithLabel(parent, args, ctx) {
+      const { limit = 20 } = args
+      const data = await Mongo.DAO.Apartment.aggregate([
+        {
+          $match: {
+            title: {
+              $exists: true,
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'labeledApartments',
+            localField: 'house_id',
+            foreignField: 'house_id',
+            as: 'labeled',
+          },
+        },
+        {
+          $match: {
+            labeled: { $ne: [] },
+          },
+        },
+        {
+          $limit: limit,
+        },
+      ]).toArray()
+      return data.map(toCamelCase)
+    },
     async queryApartmentsWithoutLabel(parent, args, ctx) {
+      const { limit = 20 } = args
       const data = await Mongo.DAO.Apartment.aggregate([
         {
           $match: {
@@ -130,7 +161,7 @@ const resolvers = {
           },
         },
         {
-          $limit: 10,
+          $limit: limit,
         },
       ]).toArray()
       return data.map(toCamelCase)
