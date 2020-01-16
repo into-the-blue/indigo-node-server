@@ -22,7 +22,7 @@ import { setupPassport } from '@/auth'
 import { graphql } from '@/config'
 import { createRateLimiter } from '@/middleware'
 import { setupDashBoard } from '@/dashboard'
-import { logger } from '@/utils'
+import { logger, randomString } from '@/utils'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
 const NOT_FOUND_MSG = 'What are you looking for ?'
@@ -43,8 +43,9 @@ setupPassport(app)
 
 // limiter
 app.use(async (ctx, next) => {
+  const requestId = randomString(10)
   try {
-    console.time(ctx.url)
+    console.time(requestId + ctx.url)
     await rateLimiter.consume(ctx.ip)
     await next()
   } catch (err) {
@@ -52,7 +53,7 @@ app.use(async (ctx, next) => {
     ctx.status = 429
     ctx.body = 'Too Many Requests'
   } finally {
-    console.timeEnd(ctx.url)
+    console.timeEnd(requestId + ctx.url)
   }
 })
 

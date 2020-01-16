@@ -1,11 +1,6 @@
-import {
-  ApolloServer,
-  gql,
-  Config,
-  IResolversParameter,
-} from 'apollo-server-koa'
-import { from } from 'rxjs'
-import { getMongoRepository } from 'typeorm'
+import { ApolloServer, gql, Config } from 'apollo-server-koa'
+import {} from 'rxjs'
+import {} from 'typeorm'
 import { Mongo } from '@/db'
 import { sleep, toCamelCase, logger } from '@/utils'
 // const schema = new GraphQLSchema({
@@ -22,6 +17,7 @@ import { sleep, toCamelCase, logger } from '@/utils'
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
   type LabeledApartment {
+    id: ID
     apartmentId: ID
     houseId: String
     decoration: String
@@ -59,6 +55,7 @@ const typeDefs = gql`
     heating: Int
     wifi: Int
     closet: Int
+    title: String
     naturalGas: Int
     transportations: [[String]]
     communityDeals: String
@@ -83,7 +80,8 @@ const typeDefs = gql`
 
   type Query {
     wallo: String
-    fetchApartments(id: Int): [Apartment]
+    queryApartments(id: Int): [Apartment]
+    queryApartmentsWithoutLabel: [Apartment]
   }
 `
 
@@ -94,9 +92,47 @@ const resolvers = {
       await sleep(1000)
       return 'Hello world!'
     },
-    async fetchApartments(parent, args, ctx) {
+    async queryApartments(parent, args, ctx) {
       logger.info(parent, args, ctx)
-      const data = await Mongo.DAO.Apartment.find({ take: 10 })
+      const data = await Mongo.DAO.Apartment.find({
+        take: 10,
+        where: {
+          title: {
+            $exists: true,
+          },
+        },
+      })
+      return data.map(toCamelCase)
+    },
+
+    async queryApartmentsWithoutLabel(parent, args, ctx) {
+      const data = await Mongo.DAO.Apartment.aggregate([
+        {
+          $match: {
+            title: {
+              $exists: true,
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'labeledApartments',
+            localField: 'house_id',
+            foreignField: 'house_id',
+            as: 'labeled',
+          },
+        },
+        {
+          $match: {
+            labeled: {
+              $size: 0,
+            },
+          },
+        },
+        {
+          $limit: 10,
+        },
+      ]).toArray()
       return data.map(toCamelCase)
     },
   },

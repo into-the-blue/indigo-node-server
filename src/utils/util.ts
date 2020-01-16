@@ -11,18 +11,20 @@ const toCase = (processor: Function) => <T>(obj: T): T => {
   const recursively = (_obj: any): any => {
     const tmp = {}
     Object.keys(_obj).forEach(key => {
-      if (String(_obj[key]) === '[object Object]') {
-        tmp[processor(key)] = recursively(_obj[key])
+      const item = _obj[key]
+      if (Array.isArray(item)) {
+        tmp[processor(key)] = item.map(recursively)
+      } else if (String(item) === '[object Object]') {
+        tmp[processor(key)] = recursively(item)
       } else {
-        tmp[processor(key)] = _obj[key]
+        tmp[processor(key)] = item
       }
     })
     return tmp
   }
 
-  if (String(obj) === '[object Object]') {
-    return recursively(obj)
-  }
+  if (String(obj) === '[object Object]') return recursively(obj)
+
   return obj
 }
 
