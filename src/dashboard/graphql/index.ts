@@ -95,11 +95,7 @@ const resolvers = {
       return 'Hello world!'
     },
     async fetchApartments(parent, args, ctx) {
-      logger.info(
-        JSON.stringify(parent),
-        JSON.stringify(args),
-        JSON.stringify(ctx)
-      )
+      logger.info(parent, args, ctx)
       const data = await Mongo.DAO.Apartment.find({ take: 10 })
       return data.map(toCamelCase)
     },
@@ -109,7 +105,7 @@ const apolloConfig: Config = {
   resolvers,
   typeDefs,
   playground: process.env.NODE_ENV === 'dev',
-  introspection: process.env.NODE_ENV === 'dev',
+  // introspection: process.env.NODE_ENV === 'dev',
   // schema,
 }
 const server = new ApolloServer(apolloConfig)

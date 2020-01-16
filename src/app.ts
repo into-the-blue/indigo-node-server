@@ -45,8 +45,6 @@ setupPassport(app)
 app.use(async (ctx, next) => {
   try {
     console.time(ctx.url)
-    ctx.body = NOT_FOUND_MSG
-    ctx.status = 404
     await rateLimiter.consume(ctx.ip)
     await next()
   } catch (err) {
@@ -88,6 +86,11 @@ useKoaServer(app, {
   controllers: [...ApiV1Controller],
 })
 
+app.use(async (ctx, next) => {
+  ctx.body = NOT_FOUND_MSG
+  ctx.status = 404
+  await next()
+})
 app.listen(PORT, async () => {
   await Mongo.connect()
   logger.info(`server is running at http://localhost:${PORT}`)
