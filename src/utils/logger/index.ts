@@ -11,7 +11,11 @@ type FTOpt = {
 const LOG_FILE_DIR = path.join(__dirname, '..', '..', '..', 'logs')
 
 const consoleTransport = new transports.Console({
-  format: format.combine(format.colorize(), format.simple()),
+  format: format.combine(
+    normalizeMessage({ prettier: true }),
+    format.colorize(),
+    format.simple()
+  ),
 })
 
 const genFileTransports = (...opts: FTOpt[]) => {
@@ -25,17 +29,13 @@ const genFileTransports = (...opts: FTOpt[]) => {
       maxSize: '20m',
       zippedArchive: true,
       level: opt.level,
-      format: format.combine(format.json()),
+      format: format.combine(normalizeMessage(), format.json()),
     })
   })
 }
 
 export const logger = createLogger({
-  format: format.combine(
-    format.label({ label: 'INDIGO' }),
-    format.timestamp(),
-    normalizeMessage()
-  ),
+  format: format.combine(format.label({ label: 'INDIGO' }), format.timestamp()),
   transports: [
     ...genFileTransports(
       { filename: 'combined' },

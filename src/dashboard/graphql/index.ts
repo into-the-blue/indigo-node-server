@@ -108,6 +108,8 @@ const resolvers = {
 const apolloConfig: Config = {
   resolvers,
   typeDefs,
+  playground: process.env.NODE_ENV === 'dev',
+  introspection: process.env.NODE_ENV === 'dev',
   // schema,
 }
 const server = new ApolloServer(apolloConfig)

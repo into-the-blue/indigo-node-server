@@ -14,8 +14,13 @@ import { format } from 'winston'
 //   }
 // }
 
-export const normalizeMessage = format((info, opts) => {
+interface Opts {
+  prettier?: boolean
+}
+export const normalizeMessage = format((info, opts: Opts = {}) => {
   const message = info.message
+  const { prettier } = opts
+  const sep = prettier ? '\n' : '; '
   if (typeof message === 'undefined') {
     info.message = 'undefined'
   } else {
@@ -31,8 +36,14 @@ export const normalizeMessage = format((info, opts) => {
         }
         return JSON.stringify(msg)
       })
-      .join('; ')
-    info.message = info.message + '; ' + msgs
+      .join(sep)
+    info.message = info.message + sep + msgs
+  }
+  if (prettier) {
+    info.message = info.message
+      .replace(/(\\)(")/g, '$2')
+      .replace(/(")(\{)/, '$2')
+      .replace(/(\})(")/, '$1')
   }
   return info
 })

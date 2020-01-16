@@ -1,1 +1,1 @@
-import {GraphQLSchema} from 'graphql'
+import { GraphQLSchema } from 'graphql'
