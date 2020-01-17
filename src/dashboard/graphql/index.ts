@@ -185,7 +185,7 @@ const resolvers = {
 const apolloConfig: Config = {
   resolvers,
   typeDefs,
-  playground: process.env.NODE_ENV === 'dev',
+  playground: true,
   // introspection: process.env.NODE_ENV === 'dev',
   // schema,
 }

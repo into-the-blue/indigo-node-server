@@ -11,6 +11,6 @@ services:
       - '7000:7000'
     restart: always
     env_file:
-      - ./.env
+      - ./prod.env
     working_dir: /apps/node-server
     command: ['npm', 'run', 'start']

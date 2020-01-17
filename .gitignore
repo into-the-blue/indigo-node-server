@@ -4,3 +4,4 @@
 .env
 env.list
 /logs
+prod.env
