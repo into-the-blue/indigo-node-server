@@ -23,6 +23,19 @@ const typeDefs = gql`
     decoration: String
   }
 
+  type Location {
+    lat: Float
+    lng: Float
+  }
+
+  type GeoInfo {
+    location: Location
+    precise: Int
+    confidence: Int
+    comprehension: Int
+    level: String
+  }
+
   type Apartment {
     id: ID
     type: String
@@ -40,9 +53,8 @@ const typeDefs = gql`
     floor: String
     buildingTotalFloors: Int
     carport: String
-    electricityType: String
+    electricity: String
     checkInDate: String
-    reservation: String
     elevator: String
     water: String
     gas: String
@@ -62,6 +74,7 @@ const typeDefs = gql`
     houseDescription: String
     houseUrl: String
     city: String
+    geoInfo: GeoInfo
     district: String
     bizcircle: String
     communityName: String
@@ -165,7 +178,6 @@ const resolvers = {
           $limit: limit,
         },
       ]).toArray()
-      console.warn(data.map(toCamelCase).slice(0, 10))
       return data.map(toCamelCase)
     },
   },

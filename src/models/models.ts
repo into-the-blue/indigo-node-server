@@ -1,7 +1,59 @@
 import { VerifyErrors } from 'jsonwebtoken'
 
+type Missing1<T> = '暂无数据' | T
+
 type ApartmentRentType = '整租' | '合租'
 type CityAbbreviation = 'sh'
+type ApartmentTags =
+  | '押一付一'
+  | '随时看房'
+  | '近地铁'
+  | '独立卫生间'
+  | '月租'
+  | '新上'
+  | '公寓'
+  | '精装'
+  | '双卫生间'
+  | '租住保障'
+  | '独立阳台'
+
+type ApartmentLease = Missing1<string>
+
+type ApartmentElectricityType = '商电' | '民电'
+
+type ApartmentWaterType = Missing1<'商水' | '民水'>
+
+type Carport = Missing1<'租用车位'>
+
+type ApartmentGas = Missing1<'有' | '无'>
+// [
+//   "1号线 - 汶水路",
+//   "534m"
+// ],
+// [
+//   "1号线 - 上海马戏城",
+//   "1188m"
+// ]
+type TransportationLine = string
+type TransportationDistance = string
+type Transportation = [TransportationLine, TransportationDistance]
+
+type ApartmentCheckInDate = '随时入住' | string
+
+type Facility = 0 | 1
+
+type ApartmentElevator = Missing1<'有'>
+
+interface IGeoInfo {
+  location: {
+    lat: number
+    lng: number
+  }
+  precise: number
+  comprehension: number
+  confidence: number
+  level: string
+}
 export interface IApartment {
   id: string
 
@@ -21,64 +73,69 @@ export interface IApartment {
 
   price: number
 
-  tags: string[]
+  tags: ApartmentTags[]
 
+  // [0-10]室[0-10]厅[0-10]卫
   houseType: string
 
   area: number
-
+  //  南 / 北 / 南 北 / 南 西 北 ....etc
   orient: string
 
-  minimalLease: string
+  // 1~12个月
+  lease: ApartmentLease
 
-  maximalLease: string
-
+  // '23'
   floor: string
 
-  buildingTotalFloors: string
+  // 33
+  buildingTotalFloors: number
 
-  carport: string
+  carport: Carport
 
-  electricityType: string
+  electricity: ApartmentElectricityType
 
-  checkInDate: string
+  // can be a date '2020-02-10'
+  checkInDate: ApartmentCheckInDate
 
-  reservation: string
+  // 暂无数据, 有, 暂无数据 转换成 无
+  elevator: ApartmentElevator
 
-  elevator: string
+  // if 暂无数据 and 公寓 in tags: 商水
+  water: ApartmentWaterType
 
-  water: string
+  gas: ApartmentGas
 
-  gas: string
+  television: Facility
 
-  television: number
+  fridge: Facility
 
-  fridge: number
+  washingMachine: Facility
 
-  washingMachine: number
+  airCondition: Facility
 
-  airCondition: number
+  waterHeater: Facility
 
-  waterHeater: number
+  bed: Facility
 
-  bed: number
+  heating: Facility
 
-  heating: number
+  wifi: Facility
 
-  wifi: number
+  closet: Facility
 
-  closet: number
+  naturalGas: Facility
 
-  naturalGas: number
+  transportations: Transportation[]
+ 
 
-  transportations: object[]
-
+  // empty str
   communityDeals: string
-
+  // empty str
   houseDescription: string
 
   houseUrl: string
-
+  // 上海
   city: string
 
   district: string
@@ -91,15 +148,15 @@ export interface IApartment {
 
   pricePerSquareMeter: number
 
-  brokerBrand: string
+  // brokerBrand: string
 
-  floorAccessibility: number
+  floorAccessibility: Facility
 
-  subwayAccessibility: number
+  subwayAccessibility: Facility
 
-  imageDownloaded: boolean
+  // imageDownloaded: boolean
 
-  geoInfo: object
+  geoInfo: IGeoInfo
 
   lat: number
 

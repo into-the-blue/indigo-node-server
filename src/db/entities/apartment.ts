@@ -41,29 +41,23 @@ export class Apartment {
   @Column({ name: 'orient', type: 'string' })
   orient: string
 
-  @Column({ name: 'minimal_lease', type: 'string' })
-  minimalLease: string
-
-  @Column({ name: 'maximal_lease', type: 'string' })
-  maximalLease: string
+  @Column({ type: 'string' })
+  lease: string
 
   @Column()
   floor: string
 
   @Column({ name: 'building_total_floors' })
-  buildingTotalFloors: string
+  buildingTotalFloors: number
 
   @Column()
   carport: string
 
-  @Column({ name: 'electricity_type' })
-  electricityType: string
+  @Column()
+  electricity: string
 
   @Column({ name: 'check_in_date' })
   checkInDate: string
-
-  @Column()
-  reservation: string
 
   @Column()
   elevator: string
@@ -134,8 +128,8 @@ export class Apartment {
   @Column({ name: 'price_per_square_meter', type: 'double' })
   pricePerSquareMeter: number
 
-  @Column({ name: 'broker_brand' })
-  brokerBrand: string
+  // @Column({ name: 'broker_brand' })
+  // brokerBrand: string
 
   @Column({ name: 'floor_accessibility', type: 'int' })
   floorAccessibility: number
@@ -143,8 +137,8 @@ export class Apartment {
   @Column({ name: 'subway_accessibility', type: 'int' })
   subwayAccessibility: number
 
-  @Column({ name: 'image_downloaded', type: 'boolean' })
-  imageDownloaded: boolean
+  // @Column({ name: 'image_downloaded', type: 'boolean' })
+  // imageDownloaded: boolean
 
   @Column({ name: 'geo_info' })
   geoInfo: object
