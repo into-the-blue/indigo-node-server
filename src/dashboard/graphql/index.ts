@@ -82,7 +82,7 @@ const typeDefs = gql`
     wallo: String
     queryApartments(id: Int): [Apartment]
     queryApartmentsWithoutLabel(limit: Int): [Apartment]
-    queryApartmentWithLabel(limit: Int): [Apartment]
+    queryApartmentsWithLabel(limit: Int): [Apartment]
   }
 `
 
@@ -106,7 +106,7 @@ const resolvers = {
       return data.map(toCamelCase)
     },
 
-    async queryApartmentWithLabel(parent, args, ctx) {
+    async queryApartmentsWithLabel(parent, args, ctx) {
       const { limit = 20 } = args
       const data = await Mongo.DAO.Apartment.aggregate([
         {
@@ -135,6 +135,7 @@ const resolvers = {
       ]).toArray()
       return data.map(toCamelCase)
     },
+    // unlabeled data
     async queryApartmentsWithoutLabel(parent, args, ctx) {
       const { limit = 20 } = args
       const data = await Mongo.DAO.Apartment.aggregate([
@@ -164,6 +165,7 @@ const resolvers = {
           $limit: limit,
         },
       ]).toArray()
+      console.warn(data.map(toCamelCase).slice(0, 10))
       return data.map(toCamelCase)
     },
   },

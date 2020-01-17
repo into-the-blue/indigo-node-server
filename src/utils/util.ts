@@ -9,6 +9,8 @@ const toCase = (processor: Function) => <T>(obj: T): T => {
   }
 
   const recursively = (_obj: any): any => {
+    if (!isObject(_obj)) return _obj
+    if (Array.isArray(_obj)) return _obj.map(recursively)
     const tmp = {}
     Object.keys(_obj).forEach(key => {
       const item = _obj[key]

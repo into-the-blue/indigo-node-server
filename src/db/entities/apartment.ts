@@ -41,12 +41,6 @@ export class Apartment {
   @Column({ name: 'orient', type: 'string' })
   orient: string
 
-  @Column({ name: 'broker_name', type: 'string' })
-  brokerName: string
-
-  @Column({ name: 'broker_contact', type: 'string' })
-  brokerContact: string
-
   @Column({ name: 'minimal_lease', type: 'string' })
   minimalLease: string
 
