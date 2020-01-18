@@ -25,6 +25,7 @@ import { setupDashBoard } from '@/dashboard'
 import { logger, randomString } from '@/utils'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
+import cluster from 'cluster'
 const NOT_FOUND_MSG = 'What are you looking for ?'
 const router = new Router<Koa.DefaultState, Koa.Context>()
 const rateLimiter = createRateLimiter()
@@ -49,7 +50,7 @@ app.use(async (ctx, next) => {
     await rateLimiter.consume(ctx.ip)
     await next()
   } catch (err) {
-    logger.info('errrrr', err)
+    logger.info('err', err)
     ctx.status = 429
     ctx.body = 'Too Many Requests'
   } finally {
@@ -94,5 +95,7 @@ app.use(async (ctx, next) => {
 })
 app.listen(PORT, async () => {
   await Mongo.connect()
-  logger.info(`server is running at http://localhost:${PORT}`)
+  logger.info(
+    `server is running at http://localhost:${PORT}`
+  )
 })

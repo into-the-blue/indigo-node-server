@@ -12,7 +12,10 @@ const LOG_FILE_DIR = path.join(__dirname, '..', '..', '..', 'logs')
 
 const consoleTransport = new transports.Console({
   format: format.combine(
-    normalizeMessage({ prettier: true }),
+    normalizeMessage({
+      prettier: true,
+      addtionalMessage: `PID: ${process.pid}`,
+    }),
     format.colorize(),
     format.simple()
   ),
@@ -29,7 +32,10 @@ const genFileTransports = (...opts: FTOpt[]) => {
       maxSize: '20m',
       zippedArchive: true,
       level: opt.level,
-      format: format.combine(normalizeMessage(), format.json()),
+      format: format.combine(
+        normalizeMessage({ addtionalMessage: `PID: ${process.pid}` }),
+        format.json()
+      ),
     })
   })
 }

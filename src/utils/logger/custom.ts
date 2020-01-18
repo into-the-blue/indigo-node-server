@@ -16,34 +16,33 @@ import { format } from 'winston'
 
 interface Opts {
   prettier?: boolean
+  addtionalMessage?: object | string
+}
+
+const cvt2Str = (input: any) => {
+  if (typeof input === 'string') return input
+  if (typeof input === 'undefined') return 'undefined'
+  return JSON.stringify(input)
 }
 export const normalizeMessage = format((info, opts: Opts = {}) => {
-  const message = info.message
-  const { prettier } = opts
+  // const message = info.message
+  const { prettier, addtionalMessage } = opts
   const sep = prettier ? '\n' : '; '
-  if (typeof message === 'undefined') {
-    info.message = 'undefined'
-  } else {
-    info.message = JSON.stringify(message)
-  }
+  info.message = cvt2Str(info.message)
   // @ts-ignore
   const args = info[Symbol.for('splat')]
   if (Array.isArray(args)) {
-    const msgs = args
-      .map(msg => {
-        if (typeof msg === 'undefined') {
-          return 'undefined'
-        }
-        return JSON.stringify(msg)
-      })
-      .join(sep)
-    info.message = info.message + sep + msgs
+    const msgs = args.map(cvt2Str).join(sep)
+    info.message += sep + msgs
   }
   if (prettier) {
     info.message = info.message
       .replace(/(\\)(")/g, '$2')
       .replace(/(")(\{)/, '$2')
       .replace(/(\})(")/, '$1')
+  }
+  if (addtionalMessage) {
+    info.message += sep + cvt2Str(addtionalMessage) + sep
   }
   return info
 })
