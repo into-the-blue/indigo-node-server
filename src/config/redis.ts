@@ -9,6 +9,7 @@
  * -----
  */
 import redis from 'redis'
+import { logger } from '@/utils'
 const client = redis.createClient({
   password: process.env.REDIS_PASSWORD,
   host: process.env.REDIS_HOST,
@@ -16,6 +17,6 @@ const client = redis.createClient({
   prefix: 'indigo_node',
 })
 client.on('error', error => {
-  console.log(error)
+  logger.error(error)
 })
 export default client

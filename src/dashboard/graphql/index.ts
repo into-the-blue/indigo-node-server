@@ -51,6 +51,7 @@ const typeDefs = gql`
     orient: String
     lease: String
     floor: String
+    floorFullInfo: String
     buildingTotalFloors: Int
     carport: String
     electricity: String
@@ -156,6 +157,9 @@ const resolvers = {
           $match: {
             title: {
               $exists: true,
+            },
+            missingInfo: {
+              $ne: false,
             },
           },
         },

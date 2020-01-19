@@ -128,6 +128,8 @@ export class Apartment {
   @Column({ name: 'price_per_square_meter', type: 'double' })
   pricePerSquareMeter: number
 
+  @Column({ name: 'floor_full_info' })
+  floorFullInfo: string
   // @Column({ name: 'broker_brand' })
   // brokerBrand: string
 

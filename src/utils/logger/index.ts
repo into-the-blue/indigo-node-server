@@ -16,6 +16,7 @@ const consoleTransport = new transports.Console({
       prettier: true,
       addtionalMessage: `PID: ${process.pid}`,
     }),
+    // format.prettyPrint(),
     format.colorize(),
     format.simple()
   ),
