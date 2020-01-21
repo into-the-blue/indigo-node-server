@@ -2,7 +2,7 @@ import AES from 'crypto-js/aes'
 import CryptoJS from 'crypto-js'
 import JWT from 'jsonwebtoken'
 import { randomBytes } from 'crypto'
-import { IJwtResponse } from '../models'
+import { IJwtResponse } from '../types'
 const secret = process.env.AES_SECRET
 const jwtSecret = process.env.JWT_SECRET
 

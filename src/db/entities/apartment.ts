@@ -41,6 +41,9 @@ export class Apartment {
   @Column({ name: 'orient', type: 'string' })
   orient: string
 
+  @Column()
+  coordtype: string
+
   @Column({ type: 'string' })
   lease: string
 
@@ -150,6 +153,9 @@ export class Apartment {
 
   @Column({ type: 'double' })
   lng: number
+
+  @Column({ type: 'array' })
+  coordinates: number[]
 
   @Column({ name: 'line_ids', type: 'array' })
   lineIds: number[]

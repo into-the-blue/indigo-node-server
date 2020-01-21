@@ -1,8 +1,13 @@
 import { ApolloServer, gql, Config } from 'apollo-server-koa'
 import {} from 'rxjs'
 import {} from 'typeorm'
-import { Mongo } from '@/db'
-import { sleep, toCamelCase, logger } from '@/utils'
+import {} from '@/utils'
+import {
+  queryApartments,
+  queryApartmentsNearBy,
+  queryApartmentsWithLabel,
+  queryApartmentsWithoutLabel,
+} from './resolvers'
 // const schema = new GraphQLSchema({
 //   query: new GraphQLObjectType({
 //     name: 'query',
@@ -14,6 +19,7 @@ import { sleep, toCamelCase, logger } from '@/utils'
 //     },
 //   }),
 // })
+
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
   type LabeledApartment {
@@ -83,6 +89,8 @@ const typeDefs = gql`
     pricePerSquareMeter: Float
     floorAccessibility: Int
     subwayAccessibility: Int
+    coordinates: [Float]
+    coordtype: String
     lat: Float
     lng: Float
     lineIds: [Int]
@@ -93,97 +101,20 @@ const typeDefs = gql`
   }
 
   type Query {
-    wallo: String
     queryApartments(id: Int): [Apartment]
     queryApartmentsWithoutLabel(limit: Int): [Apartment]
     queryApartmentsWithLabel(limit: Int): [Apartment]
+    queryApartmentsNearBy(id: ID, distance: Int, limit: Int): [Apartment]
   }
 `
 
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
-    wallo: async () => {
-      await sleep(1000)
-      return 'Hello world!'
-    },
-    async queryApartments(parent, args, ctx) {
-      logger.info(parent, args, ctx)
-      const data = await Mongo.DAO.Apartment.find({
-        take: 10,
-        where: {
-          title: {
-            $exists: true,
-          },
-        },
-      })
-      return data.map(toCamelCase)
-    },
-
-    async queryApartmentsWithLabel(parent, args, ctx) {
-      const { limit = 20 } = args
-      const data = await Mongo.DAO.Apartment.aggregate([
-        {
-          $match: {
-            title: {
-              $exists: true,
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: 'labeledApartments',
-            localField: 'house_id',
-            foreignField: 'house_id',
-            as: 'labeled',
-          },
-        },
-        {
-          $match: {
-            labeled: { $ne: [] },
-          },
-        },
-        {
-          $limit: limit,
-        },
-      ]).toArray()
-      return data.map(toCamelCase)
-    },
-    // unlabeled data
-    async queryApartmentsWithoutLabel(parent, args, ctx) {
-      const { limit = 20 } = args
-      const data = await Mongo.DAO.Apartment.aggregate([
-        {
-          $match: {
-            title: {
-              $exists: true,
-            },
-            missingInfo: {
-              $ne: false,
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: 'labeledApartments',
-            localField: 'house_id',
-            foreignField: 'house_id',
-            as: 'labeled',
-          },
-        },
-        {
-          $match: {
-            labeled: {
-              $size: 0,
-            },
-          },
-        },
-        {
-          $limit: limit,
-        },
-      ]).toArray()
-      return data.map(toCamelCase)
-    },
+    queryApartments,
+    queryApartmentsNearBy,
+    queryApartmentsWithLabel,
+    queryApartmentsWithoutLabel,
   },
 }
 const apolloConfig: Config = {

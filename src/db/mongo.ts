@@ -55,7 +55,6 @@ export const connect = async () => {
   if (!connection.isConnected) {
     await connection.connect()
   }
-
   return connection
 }
 

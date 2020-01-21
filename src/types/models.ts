@@ -127,7 +127,6 @@ export interface IApartment {
   naturalGas: Facility
 
   transportations: Transportation[]
- 
 
   // empty str
   communityDeals: string
@@ -153,6 +152,10 @@ export interface IApartment {
   floorAccessibility: Facility
 
   subwayAccessibility: Facility
+
+  coordinates: number[]
+
+  coordtype: 'gcj02'
 
   // imageDownloaded: boolean
 
