@@ -20,13 +20,16 @@ const _queryApartmeentsNearByCoordinates = async (
   const data = await Mongo.DAO.Apartment.find({
     take: limit,
     where: {
-      coordinates: {
-        $near: {
-          $geometry: { type: 'Point', coordinates: coordinates },
-          $minDistance: 0,
-          $maxDistance: distance,
+      $query: {
+        coordinates: {
+          $near: {
+            $geometry: { type: 'Point', coordinates: coordinates },
+            $minDistance: 0,
+            $maxDistance: distance,
+          },
         },
       },
+      $orderby: { created_time: -1 },
     },
   })
   return data.map(toCamelCase)
@@ -138,8 +141,11 @@ export const queryStations = async (parent, args, ctx) => {
 export const queryApartmentsNearByStation = async (parent, args, ctx) => {
   const { stationId, distance = 500, limit = 50 } = args
   if (!stationId) throw new Error('Station id is madatory')
+  console.warn(stationId, typeof stationId)
   const data = await Mongo.DAO.Station.findOne({
-    stationId,
+    where: {
+      station_id: stationId,
+    },
   })
   if (!data) throw new Error('Not found')
   return _queryApartmeentsNearByCoordinates(data.coordinates, distance, limit)
