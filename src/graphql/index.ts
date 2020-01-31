@@ -3,7 +3,6 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
-  GraphQLInt,
 } from 'graphql'
 import { graphqlConfig } from '../config'
 import { sleep } from '@/utils'

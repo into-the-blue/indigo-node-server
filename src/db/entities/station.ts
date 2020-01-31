@@ -1,28 +1,31 @@
-import { Entity, ObjectIdColumn, Column ,ObjectID} from 'typeorm';
+import { Entity, ObjectIdColumn, Column, ObjectID } from 'typeorm'
 
 @Entity({ name: 'stations' })
 export class Station {
   @ObjectIdColumn({ name: '_id' })
-  id: ObjectID;
+  id: ObjectID
 
-  @Column({ name: 'station_id', type: 'int' })
-  stationId: number;
+  @Column({ name: 'station_id', type: 'string' })
+  stationId: string
 
-  @Column({ name: 'line_id', type: 'int' })
-  lineId: number;
+  @Column({ name: 'line_id', type: 'string' })
+  lineId: string
 
   @Column({ name: 'station_name' })
-  stationName: string;
+  stationName: string
 
   @Column()
-  url: string;
-
-  @Column({ name: 'line_ids', type: 'array' })
-  lineIds: number[];
+  url: string
 
   @Column({ type: 'array' })
-  urls: string[];
+  coordinates: number[]
+
+  @Column({ name: 'line_ids', type: 'array' })
+  lineIds: string[]
+
+  @Column({ type: 'array' })
+  urls: string[]
 
   @Column()
-  city: string;
+  city: string
 }

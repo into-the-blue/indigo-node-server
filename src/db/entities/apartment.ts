@@ -158,10 +158,10 @@ export class Apartment {
   coordinates: number[]
 
   @Column({ name: 'line_ids', type: 'array' })
-  lineIds: number[]
+  lineIds: string[]
 
   @Column({ name: 'station_ids', type: 'array' })
-  stationIds: number[]
+  stationIds: string[]
 
   @Column({ name: 'created_time', type: 'date' })
   createdTime: Date

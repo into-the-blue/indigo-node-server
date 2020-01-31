@@ -155,7 +155,7 @@ export interface IApartment {
 
   coordinates: number[]
 
-  coordtype: 'gcj02'
+  coordtype: 'gcj02' | 'amap-gcj02'
 
   // imageDownloaded: boolean
 
@@ -165,9 +165,9 @@ export interface IApartment {
 
   lng: number
 
-  lineIds: number[]
+  lineIds: string[]
 
-  stationIds: number[]
+  stationIds: string[]
 
   createdTime: Date
 

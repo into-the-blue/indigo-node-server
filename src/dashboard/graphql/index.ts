@@ -2,12 +2,7 @@ import { ApolloServer, gql, Config } from 'apollo-server-koa'
 import {} from 'rxjs'
 import {} from 'typeorm'
 import {} from '@/utils'
-import {
-  queryApartments,
-  queryApartmentsNearBy,
-  queryApartmentsWithLabel,
-  queryApartmentsWithoutLabel,
-} from './resolvers'
+import * as Resolvers from './resolvers'
 // const schema = new GraphQLSchema({
 //   query: new GraphQLObjectType({
 //     name: 'query',
@@ -29,17 +24,30 @@ const typeDefs = gql`
     decoration: String
   }
 
-  type Location {
-    lat: Float
-    lng: Float
+  type AddrInfoNeighborhood {
+    name: [String]
+    type: [String]
+  }
+
+  type AddrInfo {
+    formattedAddress: String
+    country: String
+    province: String
+    citycode: String
+    city: String
+    district: String
+    township: [String]
+    neighborhood: AddrInfoNeighborhood
+    location: String
+    level: String
   }
 
   type GeoInfo {
-    location: Location
-    precise: Int
-    confidence: Int
-    comprehension: Int
-    level: String
+    status: String
+    info: String
+    infocode: String
+    count: String
+    geocodes: [AddrInfo]
   }
 
   type Apartment {
@@ -93,11 +101,32 @@ const typeDefs = gql`
     coordtype: String
     lat: Float
     lng: Float
-    lineIds: [Int]
-    stationIds: [Int]
+    lineIds: [String]
+    stationIds: [String]
     createdTime: String
     updatedTime: String
     labeled: [LabeledApartment]
+  }
+
+  type Station {
+    id: ID
+    stationId: String
+    stationName: String
+    url: String
+    city: String
+    lineId: String
+    lineIds: [String]
+    urls: [String]
+    coordinates: [Float]
+    lines: [Line]
+  }
+
+  type Line {
+    id: ID
+    lineName: String
+    lineId: String
+    url: String
+    city: String
   }
 
   type Query {
@@ -105,16 +134,21 @@ const typeDefs = gql`
     queryApartmentsWithoutLabel(limit: Int): [Apartment]
     queryApartmentsWithLabel(limit: Int): [Apartment]
     queryApartmentsNearBy(id: ID, distance: Int, limit: Int): [Apartment]
+
+    queryApartmentsNearByStation(
+      stationId: String
+      distance: Int
+      limit: Int
+    ): [Apartment]
+
+    queryStations: [Station]
   }
 `
 
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
-    queryApartments,
-    queryApartmentsNearBy,
-    queryApartmentsWithLabel,
-    queryApartmentsWithoutLabel,
+    ...Resolvers,
   },
 }
 const apolloConfig: Config = {

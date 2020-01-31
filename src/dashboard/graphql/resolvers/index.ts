@@ -2,15 +2,22 @@ import { Mongo } from '@/db'
 import { logger, toCamelCase } from '@/utils'
 import { ObjectID } from 'mongodb'
 
-export const queryApartmentsNearBy = async (parent, args, ctx) => {
-  const { id, distance = 500, limit = 50 } = args
-  if (!id) throw new Error('Id is mandatory')
-  const apartment = await Mongo.DAO.Apartment.findByIds([
-    new ObjectID(id) as any,
-  ])
-  if (!apartment.length) throw new Error('Not found')
-  const { coordinates } = apartment[0]
-  const apartmentsNearBy = await Mongo.DAO.Apartment.find({
+const _queryApartmeentsNearByCoordinates = async (
+  coordinates: number[],
+  distance: number,
+  limit: number
+) => {
+  if (
+    !(coordinates.length === 2 && coordinates.every(o => typeof o === 'number'))
+  ) {
+    throw new Error('Invalid coordinates')
+  }
+
+  if (typeof distance !== 'number') {
+    throw new Error('Distance is madatory')
+  }
+
+  const data = await Mongo.DAO.Apartment.find({
     take: limit,
     where: {
       coordinates: {
@@ -22,7 +29,18 @@ export const queryApartmentsNearBy = async (parent, args, ctx) => {
       },
     },
   })
-  return apartmentsNearBy.map(toCamelCase)
+  return data.map(toCamelCase)
+}
+
+export const queryApartmentsNearBy = async (parent, args, ctx) => {
+  const { id, distance = 500, limit = 50 } = args
+  if (!id) throw new Error('Id is mandatory')
+  const apartment = await Mongo.DAO.Apartment.findByIds([
+    new ObjectID(id) as any,
+  ])
+  if (!apartment.length) throw new Error('Not found')
+  const { coordinates } = apartment[0]
+  return _queryApartmeentsNearByCoordinates(coordinates, distance, limit)
 }
 
 export const queryApartments = async (parent, args, ctx) => {
@@ -102,3 +120,29 @@ export const queryApartmentsWithoutLabel = async (parent, args, ctx) => {
   ]).toArray()
   return data.map(toCamelCase)
 }
+
+export const queryStations = async (parent, args, ctx) => {
+  const data = await Mongo.DAO.Station.aggregate([
+    {
+      $lookup: {
+        from: 'lines',
+        foreignField: 'line_id',
+        localField: 'line_ids',
+        as: 'lines',
+      },
+    },
+  ]).toArray()
+  return data.map(toCamelCase)
+}
+
+export const queryApartmentsNearByStation = async (parent, args, ctx) => {
+  const { stationId, distance = 500, limit = 50 } = args
+  if (!stationId) throw new Error('Station id is madatory')
+  const data = await Mongo.DAO.Station.findOne({
+    stationId,
+  })
+  if (!data) throw new Error('Not found')
+  return _queryApartmeentsNearByCoordinates(data.coordinates, distance, limit)
+}
+
+// export const queryApartmeentsNearByCoordinates = async (parent, args, ctx) => {}

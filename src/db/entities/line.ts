@@ -1,19 +1,19 @@
-import { Entity, ObjectID, Column, ObjectIdColumn } from 'typeorm';
+import { Entity, ObjectID, Column, ObjectIdColumn } from 'typeorm'
 
 @Entity({ name: 'lines' })
 export class Line {
   @ObjectIdColumn({ name: '_id' })
-  id: ObjectID;
+  id: ObjectID
 
-  @Column({ name: 'line_id', unique: true, type: 'int' })
-  lineId: number;
+  @Column({ name: 'line_id', unique: true, type: 'string' })
+  lineId: string
 
   @Column({ name: 'line_name' })
-  lineName: string;
+  lineName: string
 
   @Column()
-  url: string;
+  url: string
 
   @Column()
-  city: string;
+  city: string
 }
