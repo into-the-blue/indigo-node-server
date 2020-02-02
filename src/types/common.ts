@@ -42,15 +42,27 @@ type Facility = 0 | 1
 
 type ApartmentElevator = Missing1<'有'>
 
-interface IGeoInfo {
-  location: {
-    lat: number
-    lng: number
-  }
-  precise: number
-  comprehension: number
-  confidence: number
+type GeoCode = {
+  formatted_address: string
+  country: string
+  province: string
+  city: string
+  district: string
+  township: []
+  neighborhood: { name: []; type: [] }
+  building: { name: []; type: [] }
+  adcode: string
+  street: []
+  number: []
+  location: string
   level: string
+}
+export interface IGeoInfoAMap {
+  status: '1' | string
+  info: 'OK' | string
+  infocode: '10000' | string
+  count: string
+  geocodes: GeoCode[]
 }
 export interface IApartment {
   id: string
@@ -157,7 +169,7 @@ export interface IApartment {
 
   // imageDownloaded: boolean
 
-  geoInfo: IGeoInfo
+  geoInfo: IGeoInfoAMap
 
   lat: number
 

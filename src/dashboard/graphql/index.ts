@@ -129,16 +129,28 @@ const typeDefs = gql`
     city: String
   }
 
-  type Query {
-    queryApartments(id: Int): [Apartment]
-    queryApartmentsWithoutLabel(limit: Int): [Apartment]
-    queryApartmentsWithLabel(limit: Int): [Apartment]
-    queryApartmentsNearBy(id: ID, distance: Int, limit: Int): [Apartment]
+  type queryByAddressResp {
+    coordinates: [Float]
+    apartments: [Apartment]
+  }
 
-    queryApartmentsNearByStation(
-      stationId: String
-      distance: Int
-      limit: Int
+  type Query {
+    queryApartments(id: Int!): [Apartment]
+    queryApartmentsWithoutLabel(limit: Int!): [Apartment]
+    queryApartmentsWithLabel(limit: Int!): [Apartment]
+    queryApartmentsNearby(id: ID!, distance: Int!, limit: Int!): [Apartment]
+
+    queryApartmentsNearbyAddress(
+      address: String!
+      city: String!
+      distance: Int!
+      limit: Int!
+    ): queryByAddressResp
+
+    queryApartmentsNearbyStation(
+      stationId: String!
+      distance: Int!
+      limit: Int!
     ): [Apartment]
 
     queryStations: [Station]
