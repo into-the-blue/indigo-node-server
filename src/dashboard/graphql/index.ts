@@ -50,6 +50,20 @@ const typeDefs = gql`
     geocodes: [AddrInfo]
   }
 
+  type Computed {
+    rankingOfPPSM: Int
+    rankingOfPrice: Int
+    rankingOfArea: Int
+    averagePPSM: Int
+    averagePrice: Int
+    averageArea: Int
+    lowestPPSM: String
+    lowestPrice: String
+    total: Int
+    updatedAt: String
+    range: Int
+  }
+
   type Apartment {
     id: ID
     type: String
@@ -105,6 +119,7 @@ const typeDefs = gql`
     stationIds: [String]
     createdTime: String
     updatedTime: String
+    computed: Computed
     labeled: [LabeledApartment]
   }
 

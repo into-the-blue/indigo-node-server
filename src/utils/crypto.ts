@@ -44,9 +44,7 @@ const decrypt = (
   expected: 'object' | 'string' | 'number' = 'object'
 ): object | string | number => {
   const result = AES.decrypt(message, secret).toString(CryptoJS.enc.Utf8)
-  if (expected === 'object') return JSON.parse(result)
-  if (expected === 'number') return +result
-  return result
+  return JSON.parse(result)
 }
 export const Crypto = {
   encrypt,
@@ -54,7 +52,7 @@ export const Crypto = {
 }
 
 export const Jwt = {
-  sign: (payload: string | object | Buffer, expiresIn: string = '1d') => {
+  sign: (payload: string | object | Buffer, expiresIn: string = '14d') => {
     return JWT.sign(payload, jwtSecret, {
       expiresIn,
     })

@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@koa/cors": "^3.0.0",
+    "agenda": "^3.0.0",
     "apollo-server-koa": "^2.9.15",
     "axios": "^0.19.0",
     "bson": "^4.0.3",
@@ -59,6 +60,7 @@
     "winston-transport": "^4.3.0"
   },
   "devDependencies": {
+    "@types/agenda": "^2.0.6",
     "@types/bluebird": "^3.5.28",
     "@types/bson": "^4.0.1",
     "@types/cors": "^2.8.5",

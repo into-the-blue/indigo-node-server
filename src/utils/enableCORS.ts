@@ -8,16 +8,16 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
-import { Request, Response, NextFunction } from 'express';
-const cors = (req: Request, res: Response, next: NextFunction) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') {
-    res.send(200);
-  } else {
-    next();
-  }
-};
+// import { Request, Response, NextFunction } from 'express';
+// const cors = (req: Request, res: Response, next: NextFunction) => {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type');
+//   if (req.method === 'OPTIONS') {
+//     res.send(200);
+//   } else {
+//     next();
+//   }
+// };
 
-export { cors };
+// export { cors };

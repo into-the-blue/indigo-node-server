@@ -1,4 +1,5 @@
 import { camelCase, snakeCase } from 'lodash'
+import Cluster from 'cluster'
 export const sleep = (time: number) =>
   new Promise(resolve => setTimeout(resolve, time))
 

@@ -64,12 +64,27 @@ export interface IGeoInfoAMap {
   count: string
   geocodes: GeoCode[]
 }
+type TApartmentComputed = {
+  rankingOfPPSM: number
+  rankingOfPrice: number
+  rankingOfArea: number
+  averagePPSM: number
+  averagePrice: number
+  averageArea: number
+  lowestPPSM: string
+  lowestPrice: string
+  total: number
+  updatedAt: Date
+  range: number
+}
 export interface IApartment {
   id: string
 
   type: ApartmentRentType
 
   title: string
+
+  computed?: TApartmentComputed
 
   createdAt: string
 
