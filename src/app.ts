@@ -23,6 +23,7 @@ import graphqlMiddleware from './graphql'
 import { createRateLimiter } from './middleware'
 import { setupDashBoard } from './dashboard'
 import { logger, randomString } from './utils'
+import StartCronJob from './cronJobs'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
 // import cluster from 'cluster'
@@ -31,6 +32,9 @@ const NOT_FOUND_MSG = 'What are you looking for ?'
 const router = new Router<Koa.DefaultState, Koa.Context>()
 const rateLimiter = createRateLimiter()
 const PORT = process.env.PORT || 7000
+
+// cron job
+StartCronJob()
 
 const app = new Koa<Koa.DefaultState, Koa.Context>()
 app.use(helmet())
