@@ -57,6 +57,9 @@ const typeDefs = gql`
     averagePPSM: Int
     averagePrice: Int
     averageArea: Int
+    medianPPSM: Int
+    medianPrice: Int
+    medianArea: Int
     lowestPPSM: String
     lowestPrice: String
     total: Int

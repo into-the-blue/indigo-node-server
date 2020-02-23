@@ -71,6 +71,9 @@ type TApartmentComputed = {
   averagePPSM: number
   averagePrice: number
   averageArea: number
+  medianPPSM: number
+  medianPrice: number
+  medianArea: number
   lowestPPSM: string
   lowestPrice: string
   total: number

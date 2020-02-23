@@ -1,5 +1,8 @@
-import { Mongo } from '@/db'
-import Agenda from 'agenda'
+require('module-alias/register')
+import Path, { format } from 'path'
+require('dotenv').config({ path: Path.join(__dirname, '../.env') })
+import 'reflect-metadata'
+import { Mongo } from '../src/db'
 import Moment from 'moment'
 import { from } from 'rxjs'
 import {
@@ -14,12 +17,7 @@ import {
   mapTo,
 } from 'rxjs/operators'
 import { mean } from 'lodash'
-import { Apartment } from '@/db/entities'
-import { logger } from '@/utils'
-
-enum CRON_JOBS {
-  computeApartments = 'computeApartments',
-}
+import { Apartment } from '../src/db/entities'
 
 const median = (arr: number[]): number => {
   const isOdd = arr.length % 2 !== 0
@@ -103,16 +101,8 @@ const findApartmentsNearby = (apartment: Apartment, range: number) =>
       },
     },
   })
-
-const agenda = new Agenda({
-  db: {
-    address: `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:27017/${process.env.MONGO_DB}`,
-    options: { authSource: 'admin' },
-    collection: 'agendaJobs',
-  },
-})
-
-agenda.define(CRON_JOBS.computeApartments, async (json, done) => {
+;(async () => {
+  await Mongo.connect()
   const apartments = await Mongo.DAO.Apartment.find({
     where: {
       $and: [
@@ -158,6 +148,7 @@ agenda.define(CRON_JOBS.computeApartments, async (json, done) => {
     .pipe(
       bufferCount(BATCH_SIZE),
       concatMap((as, batch) => {
+        console.time('s' + batch)
         return from(as).pipe(
           mergeMap(apartment => {
             return from(findApartmentsNearby(apartment, RANGE)).pipe(
@@ -185,22 +176,7 @@ agenda.define(CRON_JOBS.computeApartments, async (json, done) => {
           mapTo(batch)
         )
       }),
-      tap(_ => logger.info('done', _, EPOCHS))
+      tap(_ => console.timeEnd('s' + _))
     )
-    .subscribe({
-      error: err => {
-        done(err)
-      },
-      complete: () => {
-        logger.info('DONE')
-        done()
-      },
-    })
-})
-
-const start = async () => {
-  await agenda.start()
-  await agenda.schedule('0 2 * * *', CRON_JOBS.computeApartments)
-}
-
-export default start
+    .subscribe()
+})()
