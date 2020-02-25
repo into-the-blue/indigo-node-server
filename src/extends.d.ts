@@ -14,6 +14,6 @@ declare module 'winston' {
     (message: string, meta: any, callback: LogCallback): Logger
     (message: string, ...meta: any[]): Logger
     (message: any, ...meta: any[]): Logger
-    (infoObject: object): Logger
+    (infoObject: object | any): Logger
   }
 }

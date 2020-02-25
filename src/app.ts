@@ -22,7 +22,7 @@ import { setupPassport } from './auth'
 import graphqlMiddleware from './graphql'
 import { createRateLimiter } from './middleware'
 import { setupDashBoard } from './dashboard'
-import { logger, randomString } from './utils'
+import { logger, randomString, isMaster } from './utils'
 import StartCronJob from './cronJobs'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
@@ -34,8 +34,10 @@ const rateLimiter = createRateLimiter()
 const PORT = process.env.PORT || 7000
 
 // cron job
-StartCronJob()
-
+if (isMaster()) {
+  logger.info('Start Cronjob')
+  StartCronJob()
+}
 const app = new Koa<Koa.DefaultState, Koa.Context>()
 app.use(helmet())
 app.use(cors())

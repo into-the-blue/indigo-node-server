@@ -36,3 +36,8 @@ export const toCamelCase = toCase(camelCase)
 export const toSnakeCase = toCase(snakeCase)
 
 export const isObject = (sth: any) => String(sth) === '[object Object]'
+
+export const isMaster = () => {
+  if (Cluster.isMaster) return true
+  return Cluster.worker.id === 1
+}
