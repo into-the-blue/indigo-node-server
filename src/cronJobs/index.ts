@@ -12,7 +12,7 @@ const start = async () => {
 
   DefineJobs(agenda)
   await agenda.start()
-  await agenda.every('*/15 * * * *', CRON_JOBS.computeApartments)
+  await agenda.every('*/15 * * * *', CRON_JOBS.queryApartmentsToCompute)
 }
 // export { agenda }
 

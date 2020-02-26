@@ -34,10 +34,8 @@ const rateLimiter = createRateLimiter()
 const PORT = process.env.PORT || 7000
 
 // cron job
-if (isMaster()) {
-  logger.info('Start Cronjob')
-  StartCronJob()
-}
+StartCronJob()
+
 const app = new Koa<Koa.DefaultState, Koa.Context>()
 app.use(helmet())
 app.use(cors())

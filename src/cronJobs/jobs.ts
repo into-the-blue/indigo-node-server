@@ -15,10 +15,13 @@ import {
 } from 'rxjs/operators'
 import { mean } from 'lodash'
 import { Apartment } from '@/db/entities'
-import { logger } from '@/utils'
+import { logger, toCamelCase } from '@/utils'
 export const CRON_JOBS = {
   computeApartments: 'computeApartments',
+  queryApartmentsToCompute: 'queryApartmentsToCompute',
 }
+
+const RANGE = 500
 
 const median = (arr: number[]): number => {
   const isOdd = arr.length % 2 !== 0
@@ -71,123 +74,167 @@ const compute = (apts: Apartment[], target: Apartment) => {
   }
 }
 
-const findApartmentsNearby = (apartment: Apartment, range: number) =>
-  Mongo.DAO.Apartment.find({
-    where: {
-      $query: {
-        $or: [
-          {
-            expired: false,
-          },
-          {
-            expired: { $exists: false },
-          },
-        ],
-        coordinates: {
-          $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: apartment.coordinates,
-            },
-            $minDistance: 0,
-            $maxDistance: range,
-          },
-        },
+const findApartmentsNearby = (coordinates: number[], range: number) =>
+  Mongo.DAO.Apartment.aggregate([
+    {
+      $geoNear: {
+        near: { type: 'Point', coordinates: coordinates },
+        distanceField: 'distance',
+        minDistance: 0,
+        maxDistance: range,
+        query: { expired: { $ne: true } },
+        key: 'coordinates',
+        spherical: true,
       },
-      $orderby: { updated_time: -1 },
+    },
+    {
       $project: {
         area: 1,
         price_per_square_meter: 1,
         price: 1,
+        created_at: 1,
+        distance: 1,
       },
     },
-  })
+  ]).toArray()
 
-const findApartmentsToCompute = () =>
-  Mongo.DAO.Apartment.find({
-    where: {
-      $and: [
+const computeSingleApartment = (apartment: Apartment) =>
+  from(findApartmentsNearby(apartment.coordinates, RANGE)).pipe(
+    map(apts => apts.map(toCamelCase)),
+    map(apts => {
+      const res = compute(apts, apartment)
+      return {
+        ...res,
+        range: RANGE,
+      }
+    }),
+    switchMap(computed =>
+      Mongo.DAO.Apartment.updateOne(
+        { _id: apartment.id },
         {
-          $or: [
-            {
-              expired: false,
-            },
-            {
-              expired: { $exists: false },
-            },
-          ],
-        },
-        {
-          $or: [
-            {
-              computed: {
-                $exists: false,
+          $set: {
+            computed,
+            updated_at: new Date(),
+          },
+        }
+      )
+    )
+  )
+
+const findApartmentsToCompute = (limit: number = 1000): Promise<Apartment[]> =>
+  Mongo.DAO.Apartment.aggregate([
+    {
+      $match: {
+        $and: [
+          {
+            expired: { $ne: true },
+          },
+          {
+            $or: [
+              {
+                computed: {
+                  $exists: false,
+                },
               },
-            },
-            {
-              'computed.updated_at': {
-                $lte: new Date(
-                  Moment()
-                    .add(-25, 'hours')
-                    .toISOString()
-                ),
+              {
+                'computed.updated_at': {
+                  $lte: new Date(
+                    Moment()
+                      .add(-25, 'hours')
+                      .toISOString()
+                  ),
+                },
               },
-            },
-          ],
-        },
-      ],
+            ],
+          },
+        ],
+      },
     },
-    // order: {
-    //   updatedTime: -1,
-    // },
-    take: 1000,
-  })
+    {
+      $sort: {
+        updated_time: -1,
+      },
+    },
+    {
+      $project: {
+        area: 1,
+        price_per_square_meter: 1,
+        price: 1,
+        updated_time: 1,
+        coordinates: 1,
+      },
+    },
+    { $limit: limit },
+  ]).toArray()
 
 export default (agenda: Agenda) => {
-  agenda.define(CRON_JOBS.computeApartments, (json, done) => {
+  agenda.define(CRON_JOBS.computeApartments, (job, done) => {
+    const { apartment } = job.attrs.data
     logger.info('START JOB ' + CRON_JOBS.computeApartments)
-    const BATCH_SIZE = 10
-    const RANGE = 500
+    computeSingleApartment(apartment).subscribe({
+      error: err => {
+        logger.error(err)
+        done(err)
+      },
+      complete: () => {
+        logger.info('DONE ' + CRON_JOBS.computeApartments)
+        done()
+      },
+    })
+  })
+
+  agenda.define(CRON_JOBS.queryApartmentsToCompute, (job, done) => {
+    logger.info('START JOB ' + CRON_JOBS.queryApartmentsToCompute)
     from(findApartmentsToCompute())
       .pipe(
         switchMap(d => from(d)),
-        bufferCount(BATCH_SIZE),
-        concatMap((as, batch) => {
-          return from(as).pipe(
-            mergeMap(apartment => {
-              return from(findApartmentsNearby(apartment, RANGE)).pipe(
-                map(apts => {
-                  const res = compute(apts, apartment)
-                  return {
-                    ...res,
-                    range: RANGE,
-                  }
-                }),
-                switchMap(computed =>
-                  Mongo.DAO.Apartment.updateOne(
-                    { _id: apartment.id },
-                    {
-                      $set: {
-                        computed,
-                        updated_at: new Date(),
-                      },
-                    }
-                  )
-                )
-              )
-            }),
-            toArray(),
-            mapTo(batch)
-          )
-        }),
-        tap(_ => logger.info('done', _))
+        map(toCamelCase),
+        mergeMap(apt =>
+          agenda.now(CRON_JOBS.computeApartments, {
+            apartment: apt,
+          })
+        )
+        // bufferCount(BATCH_SIZE),
+        // concatMap((as, batch) => {
+        //   return from(as).pipe(
+        //     mergeMap(apartment => {
+        //       return from(
+        //         findApartmentsNearby(apartment.coordinates, RANGE)
+        //       ).pipe(
+        //         map(apts => apts.map(toCamelCase)),
+        //         map(apts => {
+        //           const res = compute(apts, apartment)
+        //           return {
+        //             ...res,
+        //             range: RANGE,
+        //           }
+        //         }),
+        //         switchMap(computed =>
+        //           Mongo.DAO.Apartment.updateOne(
+        //             { _id: apartment.id },
+        //             {
+        //               $set: {
+        //                 computed,
+        //                 updated_at: new Date(),
+        //               },
+        //             }
+        //           )
+        //         )
+        //       )
+        //     }),
+        //     toArray(),
+        //     mapTo(batch)
+        //   )
+        // }),
+        // tap(_ => logger.info('done', _))
       )
       .subscribe({
         error: err => {
+          logger.error(err)
           done(err)
         },
         complete: () => {
-          logger.info('DONE')
+          logger.info('DONE ' + CRON_JOBS.queryApartmentsToCompute)
           done()
         },
       })
