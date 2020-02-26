@@ -180,7 +180,7 @@ export default (agenda: Agenda) => {
         done(err)
       },
       complete: () => {
-        logger.info('DONE ' + CRON_JOBS.computeApartments)
+        // logger.info('DONE ' + CRON_JOBS.computeApartments)
         done()
       },
     })
