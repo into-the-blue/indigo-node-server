@@ -170,14 +170,14 @@ const findApartmentsToCompute = (limit: number = 1000): Promise<Apartment[]> =>
 export default (agenda: Agenda) => {
   agenda.define(CRON_JOBS.computeApartments, (job, done) => {
     const { apartment } = job.attrs.data
-    logger.info('START JOB ' + CRON_JOBS.computeApartments)
+    // logger.info('START JOB ' + CRON_JOBS.computeApartments)
     computeSingleApartment(apartment).subscribe({
       error: err => {
         logger.error(err)
         done(err)
       },
       complete: () => {
-        logger.info('DONE ' + CRON_JOBS.computeApartments)
+        // logger.info('DONE ' + CRON_JOBS.computeApartments)
         done()
       },
     })
