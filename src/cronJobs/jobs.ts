@@ -17,8 +17,10 @@ import { mean } from 'lodash'
 import { Apartment } from '@/db/entities'
 import { logger, toCamelCase } from '@/utils'
 export const CRON_JOBS = {
-  computeApartments: 'computeApartments',
-  queryApartmentsToCompute: 'queryApartmentsToCompute',
+  computeApartments:
+    'computeApartments' + process.env.NODE_ENV === 'dev' ? '_dev' : '',
+  queryApartmentsToCompute:
+    'queryApartmentsToCompute' + process.env.NODE_ENV === 'dev' ? '_dev' : '',
 }
 
 const RANGE = 500
@@ -121,10 +123,11 @@ const computeSingleApartment = (apartment: Apartment) =>
     )
   )
 
-const findApartmentsToCompute = (limit: number = 1000): Promise<Apartment[]> =>
+const findApartmentsToCompute = (limit: number = 100): Promise<Apartment[]> =>
   Mongo.DAO.Apartment.aggregate([
     {
       $match: {
+        coordinates: { $ne: null },
         $and: [
           {
             expired: { $ne: true },
@@ -177,7 +180,7 @@ export default (agenda: Agenda) => {
         done(err)
       },
       complete: () => {
-        // logger.info('DONE ' + CRON_JOBS.computeApartments)
+        logger.info('DONE ' + CRON_JOBS.computeApartments)
         done()
       },
     })
