@@ -2,17 +2,7 @@ import Agenda from 'agenda'
 import { Mongo } from '@/db'
 import Moment from 'moment'
 import { from } from 'rxjs'
-import {
-  map,
-  buffer,
-  bufferCount,
-  concatMap,
-  mergeMap,
-  tap,
-  switchMap,
-  toArray,
-  mapTo,
-} from 'rxjs/operators'
+import { map, mergeMap, switchMap } from 'rxjs/operators'
 import { mean } from 'lodash'
 import { Apartment } from '@/db/entities'
 import { logger, toCamelCase } from '@/utils'

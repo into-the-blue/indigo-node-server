@@ -7,16 +7,16 @@ import { Mongo } from '@/db'
 
 const start = async () => {
   await Mongo.connect()
-    const agenda = new Agenda({
-      db: {
-        address: `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:27017/${process.env.MONGO_DB}`,
-        options: { authSource: 'admin' },
-        collection: 'agendaJobs',
-      },
-    })
+  const agenda = new Agenda({
+    db: {
+      address: `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:27017/${process.env.MONGO_DB}`,
+      options: { authSource: 'admin' },
+      collection: 'agendaJobs',
+    },
+  })
 
   DefineJobs(agenda)
-    await agenda.start()
-    await agenda.every('*/1 * * * *', CRON_JOBS.queryApartmentsToCompute)
+  await agenda.start()
+  await agenda.every('*/1 * * * *', CRON_JOBS.queryApartmentsToCompute)
 }
 start()
