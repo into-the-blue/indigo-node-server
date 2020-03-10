@@ -8,6 +8,7 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
-import UserController from './user';
+import UserController from './user'
+import AuthController from './auth'
 
-export default [UserController];
+export default [UserController, AuthController]

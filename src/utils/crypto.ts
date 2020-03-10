@@ -1,7 +1,7 @@
 import AES from 'crypto-js/aes'
 import CryptoJS from 'crypto-js'
 import JWT from 'jsonwebtoken'
-import { randomBytes } from 'crypto'
+import { randomBytes, createDecipheriv } from 'crypto'
 import { IJwtResponse } from '../types'
 const secret = process.env.AES_SECRET
 const jwtSecret = process.env.JWT_SECRET
@@ -39,10 +39,7 @@ export function randomHexString(size: number) {
 
   return randomBytes(size / 2).toString('hex')
 }
-const decrypt = (
-  message: string,
-  expected: 'object' | 'string' | 'number' = 'object'
-): object | string | number => {
+const decrypt = (message: string): object | string | number => {
   const result = AES.decrypt(message, secret).toString(CryptoJS.enc.Utf8)
   return JSON.parse(result)
 }
@@ -52,7 +49,7 @@ export const Crypto = {
 }
 
 export const Jwt = {
-  sign: (payload: string | object | Buffer, expiresIn: string = '14d') => {
+  sign: (payload: string | object | Buffer, expiresIn: string = '1d') => {
     return JWT.sign(payload, jwtSecret, {
       expiresIn,
     })
@@ -72,4 +69,65 @@ export const Jwt = {
       })
     })
   },
+
+  generateTokens: (userId: string) => ({
+    accessToken: Jwt.sign(
+      {
+        userId,
+      },
+      '2h'
+    ),
+    refreshToken: Jwt.sign(
+      {
+        userId,
+      },
+      '14d'
+    ),
+  }),
+}
+
+export class WechatMpDecryptor {
+  constructor(public appId: string, public sessionKey: string) {}
+
+  decrypt = (encryptedData: string, iv: string) => {
+    try {
+      const decode = (str: string) => CryptoJS.enc.Base64.parse(str).toString()
+      const sessionKey = decode(this.sessionKey)
+      encryptedData = decode(encryptedData)
+      iv = decode(iv)
+      const message = CryptoJS.AES.decrypt(encryptedData, sessionKey, {
+        iv,
+        padding: CryptoJS.pad.Pkcs7,
+        mode: CryptoJS.mode.CBC,
+      })
+      console.warn('message', message.toString(CryptoJS.enc.Utf8))
+      return JSON.parse(message.toString(CryptoJS.enc.Utf8))
+    } catch (err) {
+      console.warn(err)
+    }
+  }
+
+  decryptData = (encryptedData: string, iv: string) => {
+    const sessionKey = Buffer.from(this.sessionKey, 'base64')
+    const _encryptedData = Buffer.from(encryptedData, 'base64')
+    const _iv = Buffer.from(iv, 'base64')
+    let decoded: any
+    try {
+      // 解密
+      const decipher = createDecipheriv('aes-128-cbc', sessionKey, _iv)
+      // 设置自动 padding 为 true，删除填充补位
+      decipher.setAutoPadding(true)
+      decoded = decipher.update(_encryptedData, 'binary', 'utf8')
+      decoded += decipher.final('utf8')
+
+      decoded = JSON.parse(decoded)
+    } catch (err) {
+      throw err
+    }
+
+    if (decoded.watermark.appid !== this.appId) {
+      throw new Error('Illegal Buffer')
+    }
+    return decoded
+  }
 }

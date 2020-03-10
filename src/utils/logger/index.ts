@@ -29,7 +29,7 @@ const genFileTransports = (...opts: FTOpt[]) => {
       filename: '%DATE%-' + opt.filename,
       extension: '.log',
       datePattern: 'YYYY-MM-DD',
-      maxFiles: '14d',
+      maxFiles: '10d',
       maxSize: '10m',
       zippedArchive: true,
       level: opt.level,

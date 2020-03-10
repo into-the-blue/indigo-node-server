@@ -18,9 +18,8 @@ import cors from '@koa/cors'
 import { useKoaServer } from 'routing-controllers'
 import ApiV1Controller from './apiv1'
 import { Mongo } from './db'
-import { setupPassport } from './auth'
 import graphqlMiddleware from './graphql'
-import { createRateLimiter } from './middleware'
+import { createRateLimiter, setupPassport } from './middleware'
 import { setupDashBoard } from './dashboard'
 import { logger, randomString, isMaster } from './utils'
 import StartCronJob from './cronJobs'
@@ -69,35 +68,47 @@ setupDashBoard(app)
 // graphql
 app.use(graphqlMiddleware())
 
-router.get('/auth', (ctx, next) => {
-  return passport.authenticate(
-    'jwt',
-    { session: true },
-    async (err, user, info, status) => {
-      logger.info({
-        err,
-        user,
-        info,
-        status,
-      })
-      return await ctx.login(user)
-      // ctx.body = 'ok';
+router.use('/api/v1', (ctx, next) => {
+  if (ctx.isAuthenticated()) {
+    next()
+  } else {
+    ctx.status = 401
+    ctx.message = 'Not Authorized'
+    ctx.body = {
+      msg: 'Not Authorized',
     }
-  )(ctx, next)
+  }
 })
+
 app.use(router.routes())
 
 // routing controller
 useKoaServer(app, {
   routePrefix: '/api/v1',
   controllers: [...ApiV1Controller],
+  authorizationChecker: (action, roles) => {
+    return action.context.isAuthenticated()
+  },
 })
 
-app.use(async (ctx, next) => {
-  ctx.body = NOT_FOUND_MSG
-  ctx.status = 404
-  await next()
-})
+// router.use('/api/v1', (ctx, next) => {
+//   if (ctx.isAuthenticated()) {
+//     console.warn('aaaaa')
+//     next()
+//   } else {
+//     ctx.status = 401
+//     ctx.body = {
+//       msg: 'Not Authorized',
+//     }
+//   }
+// })
+
+// app.use(router.routes())
+// app.use(async (ctx, next) => {
+//   ctx.body = NOT_FOUND_MSG
+//   ctx.status = 404
+//   await next()
+// })
 app.listen(PORT, async () => {
   await Mongo.connect()
   logger.info(`server is running at http://localhost:${PORT}`)

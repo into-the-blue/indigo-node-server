@@ -9,6 +9,7 @@ import {
   Apartment as ApartmentEntity,
   Line as LineEntity,
   Station as StationEntity,
+  User as UserEntity,
 } from './entities'
 const { MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB } = process.env
 // configurations of mongo db
@@ -68,7 +69,8 @@ export class DAO {
   static get Station() {
     return getMongoRepository(StationEntity)
   }
+
+  static get User() {
+    return getMongoRepository(UserEntity)
+  }
 }
-// export const Apartment = getMongoRepository(ApartmentEntity)
-// export const Line = getMongoRepository(LineEntity)
-// export const Station = getMongoRepository(StationEntity)
