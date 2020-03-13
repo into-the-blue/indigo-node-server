@@ -70,20 +70,23 @@ export const Jwt = {
     })
   },
 
-  generateTokens: (userId: string) => ({
-    accessToken: Jwt.sign(
-      {
-        userId,
-      },
-      '2h'
-    ),
-    refreshToken: Jwt.sign(
-      {
-        userId,
-      },
-      '14d'
-    ),
-  }),
+  generateTokens: (userId: string) => {
+    const token = Crypto.encrypt({ userId })
+    return {
+      accessToken: Jwt.sign(
+        {
+          token,
+        },
+        '2h'
+      ),
+      refreshToken: Jwt.sign(
+        {
+          token,
+        },
+        '14d'
+      ),
+    }
+  },
 }
 
 export class WechatMpDecryptor {

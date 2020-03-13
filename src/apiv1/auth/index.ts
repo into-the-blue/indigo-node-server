@@ -130,7 +130,7 @@ export default class UserController {
   }
 
   @Post('/auth/refresh')
-  async refreshToken(
+  async refresh(
     @Ctx() ctx: Koa.Context,
     @Body() body: { refreshToken: string }
   ) {
@@ -143,9 +143,11 @@ export default class UserController {
       }
       return ctx
     }
+    const { userId } = Crypto.decrypt(result['token']) as any
+    console.warn(userId)
     return {
       success: true,
-      ...Jwt.generateTokens(result['userId']),
+      ...Jwt.generateTokens(userId),
     }
   }
 }

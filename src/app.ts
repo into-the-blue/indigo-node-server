@@ -54,9 +54,13 @@ app.use(async (ctx, next) => {
     await rateLimiter.consume(ctx.ip)
     await next()
   } catch (err) {
-    logger.info('err', err)
-    ctx.status = 429
-    ctx.body = 'Too Many Requests'
+    if (err.remainingPoints === 0) {
+      // logger.info('err', err)
+      ctx.status = 429
+      ctx.body = 'Too Many Requests'
+      return
+    }
+    throw err
   } finally {
     console.timeEnd(requestId + ctx.url)
   }
@@ -68,17 +72,30 @@ setupDashBoard(app)
 // graphql
 app.use(graphqlMiddleware())
 
-router.use('/api/v1', (ctx, next) => {
-  if (ctx.isAuthenticated()) {
-    next()
-  } else {
-    ctx.status = 401
-    ctx.message = 'Not Authorized'
-    ctx.body = {
-      msg: 'Not Authorized',
-    }
-  }
-})
+// app.use((ctx, next) => {
+//   return passport.authenticate(
+//     'jwt',
+//     { session: false },
+//     async (err, user, info, status) => {
+//       try {
+//         // console.log({
+//         //   err,
+//         //   user,
+//         //   info,
+//         //   status,
+//         // })
+//         await ctx.login(user)
+//         ctx.user = user
+//         await next()
+//       } catch (err) {
+//         console.log('errr', err.message)
+//         ctx.status = 401
+//         ctx.message = 'Unauthorized'
+//         return ctx
+//       }
+//     }
+//   )(ctx, next)
+// })
 
 app.use(router.routes())
 
@@ -87,28 +104,27 @@ useKoaServer(app, {
   routePrefix: '/api/v1',
   controllers: [...ApiV1Controller],
   authorizationChecker: (action, roles) => {
-    return action.context.isAuthenticated()
+    return new Promise((resolve, reject) => {
+      passport.authenticate(
+        'jwt',
+        { session: false },
+        async (err, user, info, status) => {
+          try {
+            if (err || !user) return resolve(false)
+            await action.context.login(user)
+            action.context.user = user
+            resolve(true)
+          } catch (err) {
+            console.warn(err.message)
+            resolve(false)
+          }
+        }
+      )(action.context, action.next as any)
+    })
   },
+  // currentUserChecker: action => action.context.user,
 })
 
-// router.use('/api/v1', (ctx, next) => {
-//   if (ctx.isAuthenticated()) {
-//     console.warn('aaaaa')
-//     next()
-//   } else {
-//     ctx.status = 401
-//     ctx.body = {
-//       msg: 'Not Authorized',
-//     }
-//   }
-// })
-
-// app.use(router.routes())
-// app.use(async (ctx, next) => {
-//   ctx.body = NOT_FOUND_MSG
-//   ctx.status = 404
-//   await next()
-// })
 app.listen(PORT, async () => {
   await Mongo.connect()
   logger.info(`server is running at http://localhost:${PORT}`)
