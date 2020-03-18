@@ -25,6 +25,7 @@ import { logger, randomString, isMaster } from './utils'
 import StartCronJob from './cronJobs'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
+import {} from 'rate-limiter-flexible'
 // import cluster from 'cluster'
 
 const NOT_FOUND_MSG = 'What are you looking for ?'
@@ -55,7 +56,6 @@ app.use(async (ctx, next) => {
     await next()
   } catch (err) {
     if (err.remainingPoints === 0) {
-      // logger.info('err', err)
       ctx.status = 429
       ctx.body = 'Too Many Requests'
       return

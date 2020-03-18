@@ -23,18 +23,6 @@ const generateTokens = (userId: string) => {
 let { accessToken: EXPIRED_TOKEN, refreshToken: VALID_TOKEN } = generateTokens(
   '5e64c11a7a189568b8525d27'
 )
-// const EXPIRED_TOKEN = Jwt.sign(
-//   {
-//     userId: '5e64c11a7a189568b8525d27',
-//   },
-//   '0s'
-// )
-// const VALID_TOKEN = Jwt.sign(
-//   {
-//     userId: '5e64c11a7a189568b8525d27',
-//   },
-//   '100d'
-// )
 
 import Axios, { AxiosInstance } from 'axios'
 

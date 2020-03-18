@@ -117,12 +117,18 @@ export default class UserController {
         )
       }
       ctx.body = {
+        userInfo: {
+          username: userData.username,
+          gendaer: userData.gender,
+          avatar: userData.avatar,
+        },
         ...Jwt.generateTokens(userId),
         isNew: !existed,
       }
 
       return ctx
     } catch (err) {
+      console.warn(err)
       ctx.status = 500
       ctx.message = err.message
       return ctx

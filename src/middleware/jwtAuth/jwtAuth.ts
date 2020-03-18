@@ -1,7 +1,7 @@
-import { Crypto, Jwt } from '@/utils'
+import { Crypto } from '@/utils'
 import passport from 'koa-passport'
 import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt'
-import { Mongo } from '@/db'
+import {} from '@/db'
 
 export function setUpJwtAuth() {
   const options: StrategyOptions = {
