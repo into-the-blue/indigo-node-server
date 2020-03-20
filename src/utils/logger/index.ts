@@ -13,12 +13,13 @@ const LOG_FILE_DIR = path.join(__dirname, '..', '..', '..', 'logs')
 const consoleTransport = new transports.Console({
   format: format.combine(
     normalizeMessage({
-      prettier: true,
       addtionalMessage: `PID: ${process.pid}`,
     }),
-    // format.prettyPrint(),
     format.colorize(),
-    format.simple()
+    format.printf(
+      ({ level, message, label, timestamp }) =>
+        `${timestamp} ${label || '-'} ${level}: ${message}`
+    )
   ),
 })
 
@@ -42,7 +43,10 @@ const genFileTransports = (...opts: FTOpt[]) => {
 }
 
 export const logger = createLogger({
-  format: format.combine(format.label({ label: 'INDIGO' }), format.timestamp()),
+  format: format.combine(
+    format.label({ label: 'INDIGO' }),
+    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' })
+  ),
   transports: [
     ...genFileTransports(
       { filename: 'combined' },
