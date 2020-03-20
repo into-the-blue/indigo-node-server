@@ -111,6 +111,7 @@ const typeDefs = gql`
     updatedTime: String
     computed: Computed
     labeled: [LabeledApartment]
+    distance: Float
   }
 
   type Station {
@@ -124,6 +125,7 @@ const typeDefs = gql`
     urls: [String]
     coordinates: [Float]
     lines: [Line]
+    distance: Float
   }
 
   type Line {
@@ -159,6 +161,8 @@ const typeDefs = gql`
     ): [Apartment]
 
     queryStations: [Station]
+
+    queryStationsNearbyCoordinates(coordinates: [Float]!, distance: Int!): [Station]
   }
 `
 

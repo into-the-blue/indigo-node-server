@@ -1,6 +1,6 @@
 import { Mongo } from '@/db'
 import { logger, toCamelCase } from '@/utils'
-import { ObjectID } from 'mongodb'
+import {} from 'mongodb'
 import { decodeAddressAmap } from '@/services/geographic'
 import { UserInputError } from 'apollo-server-koa'
 
@@ -15,25 +15,27 @@ const _queryApartmeentsNearbyCoordinates = async (
     throw new UserInputError('Invalid coordinates')
   }
 
-  // if (typeof distance !== 'number') {
-  //   throw new Error('Distance is madatory')
-  // }
-
-  const data = await Mongo.DAO.Apartment.find({
-    take: limit,
-    where: {
-      $query: {
-        coordinates: {
-          $near: {
-            $geometry: { type: 'Point', coordinates: coordinates },
-            $minDistance: 0,
-            $maxDistance: distance,
-          },
-        },
+  const data = await Mongo.DAO.Apartment.aggregate([
+    {
+      $geoNear: {
+        near: { type: 'Point', coordinates: coordinates },
+        distanceField: 'distance',
+        minDistance: 0,
+        maxDistance: distance,
+        query: { expired: { $ne: true } },
+        key: 'coordinates',
+        spherical: true,
       },
-      $orderby: { created_time: -1 },
     },
-  })
+    {
+      $sort: {
+        created_time: -1,
+      },
+    },
+  ])
+    .limit(limit)
+    .toArray()
+
   return data.map(toCamelCase)
 }
 
@@ -164,4 +166,23 @@ export const queryApartmentsNearbyAddress = async (parent, args, ctx) => {
       limit
     ),
   }
+}
+
+export const queryStationsNearbyCoordinates = async (parent, args, ctx) => {
+  const { coordinates, distance } = args
+  const _distance = Math.min(Math.max(100, distance), 3000)
+  const data = await Mongo.DAO.Station.aggregate([
+    {
+      $geoNear: {
+        near: { type: 'Point', coordinates: coordinates },
+        distanceField: 'distance',
+        minDistance: 0,
+        maxDistance: _distance,
+        query: { expired: { $ne: true } },
+        key: 'coordinates',
+        spherical: true,
+      },
+    },
+  ]).toArray()
+  return data.map(toCamelCase)
 }

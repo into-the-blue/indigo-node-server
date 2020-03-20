@@ -19,21 +19,27 @@ const _queryApartmeentsNearbyCoordinates = async (
   //   throw new Error('Distance is madatory')
   // }
 
-  const data = await Mongo.DAO.Apartment.find({
-    take: limit,
-    where: {
-      $query: {
-        coordinates: {
-          $near: {
-            $geometry: { type: 'Point', coordinates: coordinates },
-            $minDistance: 0,
-            $maxDistance: distance,
-          },
-        },
+  const data = await Mongo.DAO.Apartment.aggregate([
+    {
+      $geoNear: {
+        near: { type: 'Point', coordinates: coordinates },
+        distanceField: 'distance',
+        minDistance: 0,
+        maxDistance: distance,
+        query: { expired: { $ne: true } },
+        key: 'coordinates',
+        spherical: true,
       },
-      $orderby: { created_time: -1 },
     },
-  })
+    {
+      $sort: {
+        created_time: -1,
+      },
+    },
+  ])
+    .limit(limit)
+    .toArray()
+
   return data.map(toCamelCase)
 }
 

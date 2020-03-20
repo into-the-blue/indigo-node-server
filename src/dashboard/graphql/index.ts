@@ -124,6 +124,7 @@ const typeDefs = gql`
     updatedTime: String
     computed: Computed
     labeled: [LabeledApartment]
+    distance: Float
   }
 
   type Station {
