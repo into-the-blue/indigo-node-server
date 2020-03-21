@@ -60,6 +60,7 @@ app.use(async (ctx, next) => {
       ctx.body = 'Too Many Requests'
       return
     }
+    console.warn(err.message)
     throw err
   } finally {
     console.timeEnd(requestId + ctx.url)

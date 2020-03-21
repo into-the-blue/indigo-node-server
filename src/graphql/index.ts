@@ -6,7 +6,7 @@ import { graphqlConfig } from '../config'
 import * as Resolvers from './resolvers'
 
 // Construct a schema, using GraphQL schema language
-const typeDefs = gql`
+export const typeDefs = gql`
   type LabeledApartment {
     id: ID
     apartmentId: ID
@@ -145,24 +145,27 @@ const typeDefs = gql`
     queryApartments(id: Int!): [Apartment]
     queryApartmentsWithoutLabel(limit: Int!): [Apartment]
     queryApartmentsWithLabel(limit: Int!): [Apartment]
-    queryApartmentsNearby(id: ID!, distance: Int!, limit: Int!): [Apartment]
+    queryApartmentsNearby(id: ID!, radius: Int!, limit: Int!): [Apartment]
 
     queryApartmentsNearbyAddress(
       address: String!
       city: String!
-      distance: Int!
+      radius: Int!
       limit: Int!
     ): queryByAddressResp
 
     queryApartmentsNearbyStation(
       stationId: String!
-      distance: Int!
+      radius: Int!
       limit: Int!
     ): [Apartment]
 
     queryStations: [Station]
 
-    queryStationsNearbyCoordinates(coordinates: [Float]!, distance: Int!): [Station]
+    queryStationsNearbyCoordinates(
+      coordinates: [Float]!
+      radius: Int!
+    ): [Station]
   }
 `
 

@@ -6,7 +6,7 @@ import { UserInputError } from 'apollo-server-koa'
 
 const _queryApartmeentsNearbyCoordinates = async (
   coordinates: number[],
-  distance: number,
+  radius: number,
   limit: number
 ) => {
   if (
@@ -21,7 +21,7 @@ const _queryApartmeentsNearbyCoordinates = async (
         near: { type: 'Point', coordinates: coordinates },
         distanceField: 'distance',
         minDistance: 0,
-        maxDistance: distance,
+        maxDistance: radius,
         query: { expired: { $ne: true } },
         key: 'coordinates',
         spherical: true,
@@ -32,19 +32,20 @@ const _queryApartmeentsNearbyCoordinates = async (
         created_time: -1,
       },
     },
-  ])
-    .limit(limit)
-    .toArray()
+    {
+      $limit: limit,
+    },
+  ]).toArray()
 
   return data.map(toCamelCase)
 }
 
 export const queryApartmentsNearby = async (parent, args, ctx) => {
-  const { id, distance = 500, limit = 50 } = args
+  const { id, radius = 500, limit = 50 } = args
   const apartment = await Mongo.DAO.Apartment.findOne(id)
   if (!apartment) throw new UserInputError('Not found')
   const { coordinates } = apartment
-  return _queryApartmeentsNearbyCoordinates(coordinates, distance, limit)
+  return _queryApartmeentsNearbyCoordinates(coordinates, radius, limit)
 }
 
 export const queryApartments = async (parent, args, ctx) => {
@@ -140,7 +141,7 @@ export const queryStations = async (parent, args, ctx) => {
 }
 
 export const queryApartmentsNearbyStation = async (parent, args, ctx) => {
-  const { stationId, distance = 500, limit = 50 } = args
+  const { stationId, radius = 500, limit = 50 } = args
   // if (!stationId) throw new UserInputError('Station id is madatory')
   console.warn(stationId, typeof stationId)
   const data = await Mongo.DAO.Station.findOne({
@@ -149,11 +150,11 @@ export const queryApartmentsNearbyStation = async (parent, args, ctx) => {
     },
   })
   if (!data) throw new UserInputError('Not found')
-  return _queryApartmeentsNearbyCoordinates(data.coordinates, distance, limit)
+  return _queryApartmeentsNearbyCoordinates(data.coordinates, radius, limit)
 }
 
 export const queryApartmentsNearbyAddress = async (parent, args, ctx) => {
-  const { address, city, limit, distance } = args
+  const { address, city, limit, radius } = args
   const geoInfo = await decodeAddressAmap(address, city)
   // console.warn(geoInfo)
   if (!+geoInfo.count) throw new UserInputError('Cannot decode this address')
@@ -162,25 +163,33 @@ export const queryApartmentsNearbyAddress = async (parent, args, ctx) => {
     coordinates,
     apartments: await _queryApartmeentsNearbyCoordinates(
       coordinates,
-      distance,
+      radius,
       limit
     ),
   }
 }
 
 export const queryStationsNearbyCoordinates = async (parent, args, ctx) => {
-  const { coordinates, distance } = args
-  const _distance = Math.min(Math.max(100, distance), 3000)
+  const { coordinates, radius } = args
+  const _radius = Math.min(Math.max(100, radius), 3000)
   const data = await Mongo.DAO.Station.aggregate([
     {
       $geoNear: {
         near: { type: 'Point', coordinates: coordinates },
         distanceField: 'distance',
         minDistance: 0,
-        maxDistance: _distance,
+        maxDistance: _radius,
         query: { expired: { $ne: true } },
         key: 'coordinates',
         spherical: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'lines',
+        foreignField: 'line_id',
+        localField: 'line_ids',
+        as: 'lines',
       },
     },
   ]).toArray()
