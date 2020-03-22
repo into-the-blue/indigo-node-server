@@ -168,4 +168,7 @@ export class Apartment {
 
   @Column({ name: 'updated_time', type: 'date' })
   updatedTime: Date
+
+  @Column({ nullable: true })
+  computed: object
 }

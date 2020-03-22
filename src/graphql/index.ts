@@ -44,9 +44,12 @@ export const typeDefs = gql`
     rankingOfPPSM: Int
     rankingOfPrice: Int
     rankingOfArea: Int
-    averagePPSM: Int
-    averagePrice: Int
-    averageArea: Int
+    averagePPSM: Float
+    averagePrice: Float
+    averageArea: Float
+    medianPPSM: Float
+    medianPrice: Float
+    medianArea: Float
     lowestPPSM: String
     lowestPrice: String
     total: Int
