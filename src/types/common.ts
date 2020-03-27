@@ -227,3 +227,46 @@ export interface IMetroStation extends IMetroStationDEPRECATED {
   urls: string[]
   coordinates: number[]
 }
+
+type TSubConditionKeys = keyof Pick<
+  IApartment,
+  'area' | 'pricePerSquareMeter' | 'price'
+>
+
+export type TSubCondition =
+  | {
+      key: TSubConditionKeys
+      type: 'range'
+      condition: [number | -1, number | -1]
+    }
+  | {
+      key: TSubConditionKeys
+      type: 'boolean'
+      condition: boolean
+    }
+
+export interface ISubscription {
+  coordinate: [number, number]
+  type: 'metroStation' | 'customLocation'
+  radius: number
+  conditions: TSubCondition[]
+  userId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ISubscriptionSetting {
+  maximumSubscriptions: number | -1
+  type: '5' | '7' | '14' | '30' | 'friend'
+  smsEnable: boolean
+  emailEnable: boolean
+  notificationEnable: boolean
+  userId: string
+}
+
+export interface ISubscriptionNotificationHistory {
+  userId: string
+  subscriptionId: string
+  createdAt: Date
+  success: boolean
+}

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "npm run preRun && npm run clean && npm run build && pm2-runtime pm2.config.js",
     "start-dev": "npm run preRun && npm run clean && npm run build && node -r dotenv/config  ./dist/app.js",
     "dev": "nodemon  -r dotenv/config --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' ./src/app.ts",
@@ -60,6 +60,9 @@
     "winston-transport": "^4.3.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.0",
+    "@babel/preset-typescript": "^7.9.0",
     "@types/agenda": "^2.0.6",
     "@types/bluebird": "^3.5.28",
     "@types/bson": "^4.0.1",
@@ -77,6 +80,8 @@
     "@types/mongodb": "^3.3.14",
     "@types/node": "^12.6.2",
     "@types/passport-jwt": "^3.0.3",
+    "babel-jest": "^25.2.0",
+    "jest": "^25.2.0",
     "nodemon": "^1.19.4",
     "rimraf": "^3.0.0",
     "ts-node": "^8.5.0",
