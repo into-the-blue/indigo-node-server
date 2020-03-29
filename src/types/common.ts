@@ -245,12 +245,22 @@ export type TSubCondition =
       condition: boolean
     }
 
+export type TSubscriptionPayload =
+  | {
+      stationId: string
+    }
+  | {
+      address: string
+    }
+
 export interface ISubscription {
   coordinate: [number, number]
   type: 'metroStation' | 'customLocation'
+  payload: TSubscriptionPayload
   radius: number
   conditions: TSubCondition[]
   userId: string
+  city: string
   createdAt: Date
   updatedAt: Date
 }

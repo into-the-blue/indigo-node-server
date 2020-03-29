@@ -22,6 +22,12 @@ export class Subscription {
   @Column({ type: 'string' })
   type: 'metroStation' | 'customLocation'
 
+  @Column()
+  payload: object
+
+  @Column()
+  city: string
+
   @Column({ type: 'date', name: 'created_at' })
   createdAt: Date
 

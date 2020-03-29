@@ -12,31 +12,30 @@ import {
   User as UserEntity,
 } from './entities'
 import { Subscription as SubscriptionEntity } from './entities/subscription'
-const { MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB } = process.env
 // configurations of mongo db
-const baseMongoConfig: ConnectionOptions = {
+const getBaseMongoConfig = (): ConnectionOptions => ({
   type: 'mongodb',
   port: 27017,
-  username: MONGO_USERNAME,
-  password: MONGO_PASSWORD,
-  host: MONGO_HOST,
-  database: MONGO_DB,
+  username: process.env.MONGO_USERNAME,
+  password: process.env.MONGO_PASSWORD,
+  host: process.env.MONGO_HOST,
+  database: process.env.MONGO_DB,
   authSource: 'admin',
   useNewUrlParser: true,
   useUnifiedTopology: true,
-}
+})
 
 export const getMongoOptions = (
   logging: boolean = true,
   synchronize: boolean = false
 ) => {
   const options: ConnectionOptions = {
-    ...baseMongoConfig,
+    ...getBaseMongoConfig(),
     entities: [
       path.join(
         __dirname,
         'entities',
-        `*.${process.env.NODE_ENV === 'dev' ? 'ts' : 'js'}`
+        `*.${['test', 'dev'].includes(process.env.NODE_ENV) ? 'ts' : 'js'}`
       ),
     ],
     synchronize,

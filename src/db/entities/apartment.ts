@@ -5,10 +5,10 @@ export class Apartment {
   @ObjectIdColumn({ name: '_id' })
   id: ObjectID
 
-  @Column()
+  @Column({ type: 'string' })
   type: string
 
-  @Column()
+  @Column({ type: 'string' })
   title: string
 
   @Column({ name: 'created_at', type: 'string' })
@@ -41,34 +41,34 @@ export class Apartment {
   @Column({ name: 'orient', type: 'string' })
   orient: string
 
-  @Column()
+  @Column({ type: 'string' })
   coordtype: string
 
   @Column({ type: 'string' })
   lease: string
 
-  @Column()
+  @Column({ type: 'string' })
   floor: string
 
-  @Column({ name: 'building_total_floors' })
+  @Column({ name: 'building_total_floors', type: 'int' })
   buildingTotalFloors: number
 
-  @Column()
+  @Column({ type: 'string' })
   carport: string
 
-  @Column()
+  @Column({ type: 'string' })
   electricity: string
 
-  @Column({ name: 'check_in_date' })
+  @Column({ name: 'check_in_date', type: 'string' })
   checkInDate: string
 
-  @Column()
+  @Column({ type: 'string' })
   elevator: string
 
-  @Column()
+  @Column({ type: 'string' })
   water: string
 
-  @Column()
+  @Column({ type: 'string' })
   gas: string
 
   @Column({ type: 'int' })
@@ -104,34 +104,34 @@ export class Apartment {
   @Column({ type: 'array' })
   transportations: object[]
 
-  @Column({ name: 'community_deals' })
+  @Column({ name: 'community_deals', type: 'string' })
   communityDeals: string
 
-  @Column({ name: 'house_description' })
+  @Column({ name: 'house_description', type: 'string' })
   houseDescription: string
 
-  @Column({ name: 'house_url' })
+  @Column({ name: 'house_url', type: 'string' })
   houseUrl: string
 
-  @Column()
+  @Column({ type: 'string' })
   city: string
 
-  @Column()
+  @Column({ type: 'string' })
   district: string
 
-  @Column()
+  @Column({ type: 'string' })
   bizcircle: string
 
-  @Column({ name: 'community_name' })
+  @Column({ name: 'community_name', type: 'string' })
   communityName: string
 
-  @Column({ name: 'community_url' })
+  @Column({ name: 'community_url', type: 'string' })
   communityUrl: string
 
   @Column({ name: 'price_per_square_meter', type: 'double' })
   pricePerSquareMeter: number
 
-  @Column({ name: 'floor_full_info' })
+  @Column({ name: 'floor_full_info', type: 'string' })
   floorFullInfo: string
   // @Column({ name: 'broker_brand' })
   // brokerBrand: string
