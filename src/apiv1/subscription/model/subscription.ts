@@ -1,8 +1,11 @@
 import { Mongo } from '@/db'
 import { ISubscription, TSubCondition, TSubscriptionPayload } from '@/types'
 import { SubscriptionInvalidValue } from '../utils/errors'
+import { toSnakeCase, toCamelCase } from '@/utils'
+import { ObjectId } from 'bson'
 type TInitialProps =
   | {
+      id?: string
       coordinate: [number, number]
       type: 'metroStation'
       city: string
@@ -12,6 +15,7 @@ type TInitialProps =
       conditions: TSubCondition[]
     }
   | {
+      id?: string
       coordinate: [number, number]
       type: 'customLocation'
       city: string
@@ -43,6 +47,8 @@ const validator = {
       return false
     })
   },
+  coordinate: (coordinate: [number, number]) =>
+    coordinate.length === 2 && coordinate.every(o => !isNaN(o)),
   payload: (
     payload: TSubscriptionPayload,
     instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'>
@@ -66,6 +72,7 @@ export class Subscription {
       radius,
       userId,
       conditions,
+      id,
       ...restProps
     } = props
     this.instance = {
@@ -79,6 +86,9 @@ export class Subscription {
         ...restProps,
       },
     }
+    if (id) {
+      Object.assign(this.instance, { id })
+    }
   }
 
   validate = () => {
@@ -86,25 +96,36 @@ export class Subscription {
       validator[key](this.instance[key], this.instance)
     )
     if (!pass) throw new SubscriptionInvalidValue()
+    return pass
   }
 
-  save = async () => {
-    await Mongo.DAO.Subscription.insertOne(this.instance)
+  save = () => {
+    return Mongo.DAO.Subscription.insertOne({
+      ...toSnakeCase(this.instance),
+      payload: this.instance.payload,
+      user_id: new ObjectId(this.instance.userId),
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
   }
 
-  update = async () => {
+  update = () => {
     const toUpdate: any = {}
     Object.keys(this.instance).forEach(key => {
+      if (key === 'id') return
       if (this.instance[key]) {
-        toUpdate[key] = this.instance[key]
+        toUpdate[toCamelCase(key)] = this.instance[key]
       }
     })
-    await Mongo.DAO.Subscription.updateOne(
+    return Mongo.DAO.Subscription.updateOne(
       {
         _id: this.instance['id'],
       },
       {
-        $set: toUpdate,
+        $set: {
+          ...toUpdate,
+          updated_at: new Date(),
+        },
       }
     )
   }
