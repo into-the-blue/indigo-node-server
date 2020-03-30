@@ -56,7 +56,7 @@ const ensureIndexes = async () => {
   ]
   const subscriptionIndexes = [
     {
-      coordinate: '2dsphere',
+      coordinates: '2dsphere',
     },
     {
       updatedAt: -1,
@@ -72,7 +72,7 @@ const ensureIndexes = async () => {
     subscriptionIndexes.map(idx => DAO.Subscription.createCollectionIndex(idx))
   )
   await DAO.Station.createCollectionIndex({
-    coordinate: '2dsphere',
+    coordinates: '2dsphere',
   })
 }
 

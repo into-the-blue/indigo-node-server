@@ -8,7 +8,7 @@ import {
   Ctx,
 } from 'routing-controllers'
 import { Mongo } from '@/db'
-import { Subscription } from '../model/subscription'
+import { SubscriptionModel } from '../model/subscription'
 import { Context } from 'koa'
 import { SubscriptionInvalidValue } from '../utils/errors'
 
@@ -17,7 +17,7 @@ import { SubscriptionInvalidValue } from '../utils/errors'
 class SubscriptionController {
   @Post()
   async addSubscription(@Body() body: any, @Ctx() ctx: Context) {
-    const sub = new Subscription({
+    const sub = new SubscriptionModel({
       ...body,
       userId: ctx.user.userId,
     })
@@ -50,7 +50,7 @@ class SubscriptionController {
       }
       return ctx
     }
-    const ins = new Subscription({
+    const ins = new SubscriptionModel({
       ...body,
     })
     await ins.update()

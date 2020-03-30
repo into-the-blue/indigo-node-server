@@ -254,7 +254,7 @@ export type TSubscriptionPayload =
     }
 
 export interface ISubscription {
-  coordinate: [number, number]
+  coordinates: [number, number]
   type: 'metroStation' | 'customLocation'
   payload: TSubscriptionPayload
   radius: number

@@ -6,7 +6,7 @@ import { ObjectId } from 'bson'
 type TInitialProps =
   | {
       id?: string
-      coordinate: [number, number]
+      coordinates: [number, number]
       type: 'metroStation'
       city: string
       radius: number
@@ -16,7 +16,7 @@ type TInitialProps =
     }
   | {
       id?: string
-      coordinate: [number, number]
+      coordinates: [number, number]
       type: 'customLocation'
       city: string
       radius: number
@@ -47,8 +47,8 @@ const validator = {
       return false
     })
   },
-  coordinate: (coordinate: [number, number]) =>
-    coordinate.length === 2 && coordinate.every(o => !isNaN(o)),
+  coordinates: (coordinates: [number, number]) =>
+    coordinates.length === 2 && coordinates.every(o => !isNaN(o)),
   payload: (
     payload: TSubscriptionPayload,
     instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'>
@@ -61,13 +61,13 @@ const validator = {
   },
 }
 
-export class Subscription {
+export class SubscriptionModel {
   instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'>
 
   constructor(props: TInitialProps) {
     const {
       type,
-      coordinate,
+      coordinates,
       city,
       radius,
       userId,
@@ -77,7 +77,7 @@ export class Subscription {
     } = props
     this.instance = {
       type,
-      coordinate,
+      coordinates,
       city,
       radius,
       userId,
@@ -129,4 +129,36 @@ export class Subscription {
       }
     )
   }
+
+  static notify = async (apartmentId: string) => {
+    const apartment = await Mongo.DAO.Apartment.findOne(apartmentId)
+    const matched = await findSubscriptionsInRange(apartment.coordinates)
+    return matched
+  }
+}
+
+export const findSubscriptionsInRange = (coordinates: [number, number]) => {
+  return Mongo.DAO.Subscription.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: coordinates,
+        },
+        sipherical: true,
+        distanceField: 'distance',
+      },
+    },
+    {
+      $redact: {
+        $cond: {
+          if: {
+            $lte: ['$distance', '$radius'],
+          },
+          then: '$$KEEP',
+          else: '$$PRUNE',
+        },
+      },
+    },
+  ]).toArray()
 }

@@ -8,7 +8,7 @@ export class Subscription {
   @Column({
     type: 'array',
   })
-  coordinate: [number, number]
+  coordinates: [number, number]
 
   @ObjectIdColumn({ name: 'user_id' })
   userId: ObjectID

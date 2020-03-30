@@ -155,7 +155,7 @@ export class Apartment {
   lng: number
 
   @Column({ type: 'array' })
-  coordinates: number[]
+  coordinates: [number, number]
 
   @Column({ name: 'line_ids', type: 'array' })
   lineIds: string[]

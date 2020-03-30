@@ -4,20 +4,21 @@ require('dotenv').config({
 import 'reflect-metadata'
 require('module-alias/register')
 import Path from 'path'
-import { Subscription } from './subscription'
+import { SubscriptionModel, findSubscriptionsInRange } from './subscription'
 import { Mongo } from '@/db'
-
+import { EXAMPLE_APARTMENT_DATA, EXAMPLE_SUBSCRIPTIONS_DATA } from './testData'
 beforeAll(async done => {
   await Mongo.connect()
   done()
 })
 beforeEach(async done => {
+  await Mongo.DAO.Apartment.deleteMany({})
   await Mongo.DAO.Subscription.deleteMany({})
   done()
 })
 test('should insert one subscription', async done => {
   const data = {
-    coordinate: [121.485468, 31.227375],
+    coordinates: [121.485468, 31.227375],
     type: 'metroStation',
     city: 'shanghai',
     radius: 500,
@@ -36,7 +37,7 @@ test('should insert one subscription', async done => {
       },
     ],
   }
-  const ins = new Subscription({
+  const ins = new SubscriptionModel({
     ...(data as any),
   })
   await ins.save()
@@ -49,7 +50,7 @@ test('should insert one subscription', async done => {
     stationId: data.stationId,
   })
   expect(sub.userId).toBeDefined()
-  expect(sub.coordinate).toEqual(data.coordinate)
+  expect(sub.coordinates).toEqual(data.coordinates)
   expect(sub.type).toEqual(data.type)
   expect(sub.radius).toBe(data.radius)
   expect(sub.createdAt).toBeDefined()
@@ -60,7 +61,7 @@ test('should insert one subscription', async done => {
 
 test('should pass validation', done => {
   const data = {
-    coordinate: [121.485468, 31.227375],
+    coordinates: [121.485468, 31.227375],
     type: 'metroStation',
     city: 'shanghai',
     radius: 500,
@@ -79,7 +80,7 @@ test('should pass validation', done => {
       },
     ],
   }
-  const instance = new Subscription({
+  const instance = new SubscriptionModel({
     ...(data as any),
   })
   expect(instance.validate()).toBeTruthy()
@@ -88,7 +89,7 @@ test('should pass validation', done => {
 
 test('should fail validation', done => {
   const data = {
-    coordinate: [121.485468, 31.227375],
+    coordinates: [121.485468, 31.227375],
     type: 'metroStation',
     city: 'shanghai',
     radius: 500,
@@ -107,7 +108,7 @@ test('should fail validation', done => {
       },
     ],
   }
-  const instance = new Subscription({
+  const instance = new SubscriptionModel({
     ...(data as any),
   })
   try {
@@ -120,7 +121,7 @@ test('should fail validation', done => {
 
 test('should update subscription', async done => {
   const data = {
-    coordinate: [121.485468, 31.227375],
+    coordinates: [121.485468, 31.227375],
     type: 'metroStation',
     city: 'shanghai',
     radius: 500,
@@ -139,7 +140,7 @@ test('should update subscription', async done => {
       },
     ],
   }
-  const instance = new Subscription({
+  const instance = new SubscriptionModel({
     ...(data as any),
   })
   const id = (await instance.save()).insertedId
@@ -159,11 +160,20 @@ test('should update subscription', async done => {
       },
     ],
   }
-  const ins2 = new Subscription({
+  const ins2 = new SubscriptionModel({
     ...(toUpdate as any),
   })
   await ins2.update()
   const res = await Mongo.DAO.Subscription.findOne(id)
   expect(res.conditions).toEqual(toUpdate.conditions)
+  done()
+})
+
+test('should have subscriptions match', async done => {
+  await Mongo.DAO.Apartment.insertOne(EXAMPLE_APARTMENT_DATA)
+  await Mongo.DAO.Subscription.insertMany(EXAMPLE_SUBSCRIPTIONS_DATA)
+  const apt = await Mongo.DAO.Apartment.findOne('5e1985789b56e63c965f91e2')
+  const matched = await findSubscriptionsInRange(apt.coordinates)
+  expect(matched.length).toBe(9)
   done()
 })
