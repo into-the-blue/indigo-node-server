@@ -10,6 +10,7 @@ import {
 import { Mongo } from '@/db'
 import { Subscription } from '../model/subscription'
 import { Context } from 'koa'
+import { SubscriptionInvalidValue } from '../utils/errors'
 
 @Authorized()
 @JsonController()
@@ -20,10 +21,45 @@ class SubscriptionController {
       ...body,
       userId: ctx.user.userId,
     })
+    try {
+      sub.validate()
+      await sub.save()
+      ctx.body = {
+        success: true,
+        message: 'none',
+      }
+    } catch (err) {
+      if (err instanceof SubscriptionInvalidValue) {
+        ctx.body = {
+          success: false,
+          message: 'Invalid value',
+        }
+      } else {
+        throw err
+      }
+    }
+    return ctx
   }
 
   @Put()
-  async updateSubscription(@Body() body: any) {}
+  async updateSubscription(@Body() body: any, @Ctx() ctx: Context) {
+    if (!body.id) {
+      ctx.body = {
+        success: false,
+        message: 'Subscription id is mandatory',
+      }
+      return ctx
+    }
+    const ins = new Subscription({
+      ...body,
+    })
+    await ins.update()
+    ctx.body = {
+      success: true,
+      message: 'none',
+    }
+    return ctx
+  }
 }
 
 export default SubscriptionController
