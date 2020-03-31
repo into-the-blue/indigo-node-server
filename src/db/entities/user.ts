@@ -2,7 +2,7 @@ import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm'
 type TRegistrationType = 'wechat'
 
 @Entity({ name: 'users' })
-export class User {
+export class UserEntity {
   @ObjectIdColumn({ name: '_id' })
   id: ObjectID
 

@@ -4,7 +4,7 @@ import Moment from 'moment'
 import { from } from 'rxjs'
 import { map, mergeMap, switchMap } from 'rxjs/operators'
 import { mean } from 'lodash'
-import { Apartment } from '@/db/entities'
+import { ApartmentEntity } from '@/db/entities'
 import { logger, toCamelCase } from '@/utils'
 export const CRON_JOBS = {
   computeApartments: 'computeApartments',
@@ -19,7 +19,7 @@ const median = (arr: number[]): number => {
   return +((arr[arr.length / 2] + arr[arr.length / 2 + 1]) / 2).toFixed(2)
 }
 
-const compute = (apts: Apartment[], target: Apartment) => {
+const compute = (apts: ApartmentEntity[], target: ApartmentEntity) => {
   const total = apts.length
   const prices = apts
     .map(a => a.price)
@@ -88,7 +88,7 @@ const findApartmentsNearby = (coordinates: number[], range: number) =>
     },
   ]).toArray()
 
-const computeSingleApartment = (apartment: Apartment) =>
+const computeSingleApartment = (apartment: ApartmentEntity) =>
   from(findApartmentsNearby(apartment.coordinates, RANGE)).pipe(
     map(apts => apts.map(toCamelCase)),
     map(apts => {
@@ -111,7 +111,7 @@ const computeSingleApartment = (apartment: Apartment) =>
     )
   )
 
-const findApartmentsToCompute = (limit: number = 1000): Promise<Apartment[]> =>
+const findApartmentsToCompute = (limit: number = 1000): Promise<ApartmentEntity[]> =>
   Mongo.DAO.Apartment.aggregate([
     {
       $match: {

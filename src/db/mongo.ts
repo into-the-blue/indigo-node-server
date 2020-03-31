@@ -6,12 +6,12 @@ import {
 } from 'typeorm'
 import path from 'path'
 import {
-  Apartment as ApartmentEntity,
-  Line as LineEntity,
-  Station as StationEntity,
-  User as UserEntity,
+  ApartmentEntity,
+  LineEntity,
+  StationEntity,
+  UserEntity,
+  SubscriptionEntity,
 } from './entities'
-import { Subscription as SubscriptionEntity } from './entities/subscription'
 // configurations of mongo db
 const getBaseMongoConfig = (): ConnectionOptions => ({
   type: 'mongodb',

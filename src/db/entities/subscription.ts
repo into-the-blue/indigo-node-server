@@ -1,7 +1,7 @@
 import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm'
 import { TSubCondition } from '@/types'
 @Entity({ name: 'subscriptions' })
-export class Subscription {
+export class SubscriptionEntity {
   @ObjectIdColumn({ name: '_id' })
   id: ObjectID
 

@@ -4,9 +4,12 @@ require('dotenv').config({
 import 'reflect-metadata'
 require('module-alias/register')
 import Path from 'path'
-import { SubscriptionModel, findSubscriptionsInRange } from './subscription'
+import { SubscriptionModel } from './subscription'
+import { findSubscriptionsInRange, handleConditions } from './helper'
 import { Mongo } from '@/db'
 import { EXAMPLE_APARTMENT_DATA, EXAMPLE_SUBSCRIPTIONS_DATA } from './testData'
+import { TSubCondition } from '@/types'
+import { toCamelCase } from '@/utils'
 beforeAll(async done => {
   await Mongo.connect()
   done()
@@ -169,11 +172,87 @@ test('should update subscription', async done => {
   done()
 })
 
-test('should have subscriptions match', async done => {
+test('should have subscriptions matched in range', async done => {
   await Mongo.DAO.Apartment.insertOne(EXAMPLE_APARTMENT_DATA)
   await Mongo.DAO.Subscription.insertMany(EXAMPLE_SUBSCRIPTIONS_DATA)
-  const apt = await Mongo.DAO.Apartment.findOne('5e1985789b56e63c965f91e2')
+  const apt = await Mongo.DAO.Apartment.findOne(
+    EXAMPLE_APARTMENT_DATA._id.toHexString()
+  )
   const matched = await findSubscriptionsInRange(apt.coordinates)
   expect(matched.length).toBe(9)
+  done()
+})
+
+test('should pass condition check', done => {
+  const apartment = toCamelCase(EXAMPLE_APARTMENT_DATA) as any
+  const conditions: TSubCondition[] = [
+    {
+      type: 'range',
+      key: 'price',
+      condition: [-1, 4500],
+    },
+    {
+      type: 'range',
+      key: 'area',
+      condition: [15, 20],
+    },
+  ]
+  const conditions2: TSubCondition[] = [
+    {
+      type: 'range',
+      key: 'pricePerSquareMeter',
+      condition: [250, 300],
+    },
+  ]
+  const conditions3: TSubCondition[] = [
+    {
+      type: 'range',
+      key: 'price',
+      condition: [-1, -1],
+    },
+  ]
+  const res1 = handleConditions(conditions, apartment)
+  const res2 = handleConditions(conditions2, apartment)
+  const res3 = handleConditions(conditions3, apartment)
+  expect(res1).toBeTruthy()
+  expect(res2).toBeTruthy()
+  expect(res3).toBeTruthy()
+  done()
+})
+
+test('should fail condition check', done => {
+  const apartment = toCamelCase(EXAMPLE_APARTMENT_DATA) as any
+  const conditions: TSubCondition[] = [
+    {
+      type: 'range',
+      key: 'price',
+      condition: [3500, 4100],
+    },
+    {
+      type: 'range',
+      key: 'area',
+      condition: [15, 20],
+    },
+  ]
+  const conditions2: TSubCondition[] = [
+    {
+      type: 'range',
+      key: 'pricePerSquareMeter',
+      condition: [200, 250],
+    },
+  ]
+  const conditions3: TSubCondition[] = [
+    {
+      type: 'range',
+      key: 'price',
+      condition: [4510, 5000],
+    },
+  ]
+  const res1 = handleConditions(conditions, apartment)
+  const res2 = handleConditions(conditions2, apartment)
+  const res3 = handleConditions(conditions3, apartment)
+  expect(res1).toBeFalsy()
+  expect(res2).toBeFalsy()
+  expect(res3).toBeFalsy()
   done()
 })

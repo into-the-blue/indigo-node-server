@@ -2,6 +2,7 @@ import { Mongo } from '@/db'
 import { ISubscription, TSubCondition, TSubscriptionPayload } from '@/types'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { toSnakeCase, toCamelCase } from '@/utils'
+import { findSubscriptionsInRange, handleConditions } from './helper'
 import { ObjectId } from 'bson'
 type TInitialProps =
   | {
@@ -132,33 +133,10 @@ export class SubscriptionModel {
 
   static notify = async (apartmentId: string) => {
     const apartment = await Mongo.DAO.Apartment.findOne(apartmentId)
-    const matched = await findSubscriptionsInRange(apartment.coordinates)
+    const subsInRange = await findSubscriptionsInRange(apartment.coordinates)
+    const matched = subsInRange.filter(sub =>
+      handleConditions(sub.conditions, apartment)
+    )
     return matched
   }
-}
-
-export const findSubscriptionsInRange = (coordinates: [number, number]) => {
-  return Mongo.DAO.Subscription.aggregate([
-    {
-      $geoNear: {
-        near: {
-          type: 'Point',
-          coordinates: coordinates,
-        },
-        sipherical: true,
-        distanceField: 'distance',
-      },
-    },
-    {
-      $redact: {
-        $cond: {
-          if: {
-            $lte: ['$distance', '$radius'],
-          },
-          then: '$$KEEP',
-          else: '$$PRUNE',
-        },
-      },
-    },
-  ]).toArray()
 }
