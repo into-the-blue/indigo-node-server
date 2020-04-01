@@ -57,6 +57,17 @@ type GeoCode = {
   location: string
   level: string
 }
+interface IGeoInfoBDMap {
+  location: {
+    lat: number
+    lng: number
+  }
+  precise: number
+  comprehension: number
+  confidence: number
+  level: string
+}
+
 export interface IGeoInfoAMap {
   status: '1' | string
   info: 'OK' | string
@@ -86,8 +97,6 @@ export interface IApartment {
   type: ApartmentRentType
 
   title: string
-
-  computed?: TApartmentComputed
 
   createdAt: string
 
@@ -200,6 +209,10 @@ export interface IApartment {
   createdTime: Date
 
   updatedTime: Date
+
+  distance: number
+
+  computed?: TApartmentComputed
 }
 
 export interface IMetroLine {
@@ -217,6 +230,7 @@ interface IMetroStationDEPRECATED {
 
 export interface IMetroStationClient extends IMetroStation {
   lines: IMetroLine[]
+  distance: number
 }
 export interface IMetroStation extends IMetroStationDEPRECATED {
   id: string
