@@ -60,9 +60,20 @@ const mapApartmentValueToBoolean = (value: any) => {
   return !FALSE_VALUES.includes(value)
 }
 
+const SPECIFIC_KEYS = ['isApartment']
+
+const _specificKeyHandler = {
+  isApartment: (apartment: ApartmentEntity, condition: TSubCondition) => {
+    return apartment.tags.includes('公寓')
+  },
+}
+
 const _handleCondition = (apartment: ApartmentEntity) => (
   condition: TSubCondition
 ) => {
+  const handler = _specificKeyHandler[condition.key]
+  if (handler) return handler(apartment, condition)
+
   if (condition.type === 'range') {
     const value = apartment[condition.key] as number
     const con = [...condition.condition]
@@ -76,6 +87,10 @@ const _handleCondition = (apartment: ApartmentEntity) => (
       mapApartmentValueToBoolean(apartment[condition.key]) ===
       condition.condition
     )
+  }
+
+  if (condition.type === 'text') {
+    return apartment[condition.key] === condition.condition
   }
 }
 

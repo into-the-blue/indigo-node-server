@@ -57,16 +57,16 @@ type GeoCode = {
   location: string
   level: string
 }
-interface IGeoInfoBDMap {
-  location: {
-    lat: number
-    lng: number
-  }
-  precise: number
-  comprehension: number
-  confidence: number
-  level: string
-}
+// interface IGeoInfoBDMap {
+//   location: {
+//     lat: number
+//     lng: number
+//   }
+//   precise: number
+//   comprehension: number
+//   confidence: number
+//   level: string
+// }
 
 export interface IGeoInfoAMap {
   status: '1' | string
@@ -247,17 +247,28 @@ type TSubConditionKeys = keyof Pick<
   'area' | 'pricePerSquareMeter' | 'price'
 >
 
+export type TSubConditionRange = {
+  key: 'area' | 'pricePerSquareMeter' | 'price'
+  type: 'range'
+  condition: [number | -1, number | -1]
+}
+
+export type TSubConditionBoolean = {
+  key: 'isApartment'
+  type: 'boolean'
+  condition: boolean
+}
+
+export type TSubConditionText = {
+  key: 'type'
+  type: 'text'
+  condition: string
+}
+
 export type TSubCondition =
-  | {
-      key: TSubConditionKeys
-      type: 'range'
-      condition: [number | -1, number | -1]
-    }
-  | {
-      key: TSubConditionKeys
-      type: 'boolean'
-      condition: boolean
-    }
+  | TSubConditionBoolean
+  | TSubConditionRange
+  | TSubConditionText
 
 export type TSubscriptionPayload =
   | {
