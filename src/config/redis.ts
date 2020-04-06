@@ -17,7 +17,7 @@ const client = new Redis({
   keyPrefix: 'indigo_node',
   db: 0,
 })
-client.on('error', error => {
-  logger.error(error)
+client.on('error', (error) => {
+  logger.error('redis: ' + JSON.stringify(error))
 })
 export default client
