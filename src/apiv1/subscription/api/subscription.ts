@@ -11,12 +11,29 @@ import { Mongo } from '@/db'
 import { SubscriptionModel } from '../model/subscription'
 import { Context } from 'koa'
 import { SubscriptionInvalidValue } from '../utils/errors'
+import { TSubCondition } from '@/types'
 
+type IAddSubBody = {
+  coordinates: [number, number]
+  city: string
+  radius: number
+  userId: string
+  conditions: TSubCondition[]
+} & (
+  | {
+      address: string
+      type: 'customLocation'
+    }
+  | {
+      stationId: string
+      type: 'metroStation'
+    }
+)
 @Authorized()
 @JsonController()
 class SubscriptionController {
   @Post()
-  async addSubscription(@Body() body: any, @Ctx() ctx: Context) {
+  async addSubscription(@Body() body: IAddSubBody, @Ctx() ctx: Context) {
     const sub = new SubscriptionModel({
       ...body,
       userId: ctx.user.userId,
