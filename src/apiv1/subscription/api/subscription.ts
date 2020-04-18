@@ -17,7 +17,6 @@ type IAddSubBody = {
   coordinates: [number, number]
   city: string
   radius: number
-  userId: string
   conditions: TSubCondition[]
 } & (
   | {
@@ -32,7 +31,7 @@ type IAddSubBody = {
 @Authorized()
 @JsonController()
 class SubscriptionController {
-  @Post()
+  @Post('/subscription')
   async addSubscription(@Body() body: IAddSubBody, @Ctx() ctx: Context) {
     const sub = new SubscriptionModel({
       ...body,
@@ -45,8 +44,10 @@ class SubscriptionController {
         success: true,
         message: 'none',
       }
+      console.warn('done')
     } catch (err) {
       if (err instanceof SubscriptionInvalidValue) {
+        console.warn('invalid')
         ctx.body = {
           success: false,
           message: 'Invalid value',
@@ -58,7 +59,7 @@ class SubscriptionController {
     return ctx
   }
 
-  @Put()
+  @Put('/subscription')
   async updateSubscription(@Body() body: any, @Ctx() ctx: Context) {
     if (!body.id) {
       ctx.body = {

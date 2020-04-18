@@ -10,5 +10,6 @@
  */
 import UserController from './user'
 import AuthController from './auth'
+import { SubscriptionController } from './subscription/api'
 
-export default [UserController, AuthController]
+export default [UserController, AuthController, SubscriptionController]

@@ -75,7 +75,7 @@ export interface IGeoInfoAMap {
   count: string;
   geocodes: GeoCode[];
 }
-type TApartmentComputed = {
+export type TApartmentComputed = {
   rankingOfPPSM: number;
   rankingOfPrice: number;
   rankingOfArea: number;
@@ -239,30 +239,30 @@ export interface IMetroStation extends IMetroStationDEPRECATED {
   city: string;
   lineIds: string[];
   urls: string[];
-  coordinates: number[];
+  coordinates: [number, number];
 }
 
-type TSubConditionKeys = keyof Pick<IApartment, 'area' | 'pricePerSquareMeter' | 'price'>;
+// type TSubConditionKeys = keyof Pick<IApartment, 'area' | 'pricePerSquareMeter' | 'price'>;
 
 export type TSubConditionRange = {
   key: 'area' | 'pricePerSquareMeter' | 'price';
   type: 'range';
   condition: [number | -1, number | -1];
-  value?: [number, number];
+  value: [number, number];
 };
 
 export type TSubConditionBoolean = {
   key: 'isApartment';
   type: 'boolean';
   condition: boolean;
-  value?: [string, string];
+  value: [string, string];
 };
 
 export type TSubConditionText = {
   key: string;
   type: 'text';
   condition: string;
-  value?: string[];
+  value: string[];
 };
 
 export type TSubCondition = TSubConditionBoolean | TSubConditionRange | TSubConditionText;
@@ -301,4 +301,9 @@ export interface ISubscriptionNotificationHistory {
   subscriptionId: string;
   createdAt: Date;
   success: boolean;
+}
+
+export interface ICustomLocation {
+  address: string;
+  coordinates: [number, number];
 }
