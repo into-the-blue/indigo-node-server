@@ -12,6 +12,8 @@ import { SubscriptionModel } from '../model/subscription'
 import { Context } from 'koa'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { TSubCondition } from '@/types'
+import { toCamelCase } from '@/utils'
+import { ObjectId } from 'bson'
 
 type IAddSubBody = {
   coordinates: [number, number]
@@ -31,6 +33,23 @@ type IAddSubBody = {
 @Authorized()
 @JsonController()
 class SubscriptionController {
+  @Get('/subscription')
+  async querySubscription(@Body() body: any, @Ctx() ctx: Context) {
+    const userId = ctx.user.userId
+    try {
+      const data = await Mongo.DAO.Subscription.find({
+        where: {
+          user_id: new ObjectId(userId),
+        },
+      })
+      console.warn(userId, data)
+      return data.map(toCamelCase)
+    } catch (err) {
+      console.warn(err)
+      throw err
+    }
+  }
+
   @Post('/subscription')
   async addSubscription(@Body() body: IAddSubBody, @Ctx() ctx: Context) {
     const sub = new SubscriptionModel({

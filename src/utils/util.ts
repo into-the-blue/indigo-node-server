@@ -1,7 +1,13 @@
 import { camelCase, snakeCase } from 'lodash'
 import Cluster from 'cluster'
+import { ObjectId } from 'bson'
 export const sleep = (time: number) =>
-  new Promise(resolve => setTimeout(resolve, time))
+  new Promise((resolve) => setTimeout(resolve, time))
+
+const valuePreprocess = (value: any) => {
+  if (value instanceof ObjectId) return value.toHexString()
+  return value
+}
 
 const toCase = (processor: Function) => <T>(obj: T): T => {
   if (obj === null || typeof obj === 'undefined') return obj
@@ -14,18 +20,20 @@ const toCase = (processor: Function) => <T>(obj: T): T => {
     if (Array.isArray(_obj)) return _obj.map(recursively)
     if (!isObject(_obj)) return _obj
     const tmp = {}
-    Object.keys(_obj).forEach(key => {
+    Object.keys(_obj).forEach((key) => {
       if (SPECIFIC_OBJ_KEYS.includes(key)) {
         tmp[key] = _obj[key]
         return
       }
-      const item = _obj[key]
+      const item = valuePreprocess(_obj[key])
+      const processedKey = processor(key)
+
       if (Array.isArray(item)) {
-        tmp[processor(key)] = item.map(recursively)
+        tmp[processedKey] = item.map(recursively)
       } else if (isObject(item)) {
-        tmp[processor(key)] = recursively(item)
+        tmp[processedKey] = recursively(item)
       } else {
-        tmp[processor(key)] = item
+        tmp[processedKey] = item
       }
     })
     return tmp

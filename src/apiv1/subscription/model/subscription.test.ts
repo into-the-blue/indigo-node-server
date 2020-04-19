@@ -10,16 +10,16 @@ import { Mongo } from '@/db'
 import { EXAMPLE_APARTMENT_DATA, EXAMPLE_SUBSCRIPTIONS_DATA } from './testData'
 import { TSubCondition } from '@/types'
 import { toCamelCase } from '@/utils'
-beforeAll(async done => {
+beforeAll(async (done) => {
   await Mongo.connect()
   done()
 })
-beforeEach(async done => {
+beforeEach(async (done) => {
   await Mongo.DAO.Apartment.deleteMany({})
   await Mongo.DAO.Subscription.deleteMany({})
   done()
 })
-test('should insert one subscription', async done => {
+test('should insert one subscription', async (done) => {
   const data = {
     coordinates: [121.485468, 31.227375],
     type: 'metroStation',
@@ -62,7 +62,7 @@ test('should insert one subscription', async done => {
   done()
 })
 
-test('should pass validation', done => {
+test('should pass validation', (done) => {
   const data = {
     coordinates: [121.485468, 31.227375],
     type: 'metroStation',
@@ -90,7 +90,7 @@ test('should pass validation', done => {
   done()
 })
 
-test('should fail validation', done => {
+test('should fail validation', (done) => {
   const data = {
     coordinates: [121.485468, 31.227375],
     type: 'metroStation',
@@ -122,7 +122,7 @@ test('should fail validation', done => {
   done()
 })
 
-test('should update subscription', async done => {
+test('should update subscription', async (done) => {
   const data = {
     coordinates: [121.485468, 31.227375],
     type: 'metroStation',
@@ -172,7 +172,7 @@ test('should update subscription', async done => {
   done()
 })
 
-test('should have subscriptions matched in range', async done => {
+test('should have subscriptions matched in range', async (done) => {
   await Mongo.DAO.Apartment.insertOne(EXAMPLE_APARTMENT_DATA)
   await Mongo.DAO.Subscription.insertMany(EXAMPLE_SUBSCRIPTIONS_DATA)
   const apt = await Mongo.DAO.Apartment.findOne(
@@ -183,18 +183,20 @@ test('should have subscriptions matched in range', async done => {
   done()
 })
 
-test('should pass condition check', done => {
+test('should pass condition check', (done) => {
   const apartment = toCamelCase(EXAMPLE_APARTMENT_DATA) as any
   const conditions: TSubCondition[] = [
     {
       type: 'range',
       key: 'price',
       condition: [-1, 4500],
+      value: [1000, 4000],
     },
     {
       type: 'range',
       key: 'area',
       condition: [15, 20],
+      value: [10, 100],
     },
   ]
   const conditions2: TSubCondition[] = [
@@ -202,6 +204,7 @@ test('should pass condition check', done => {
       type: 'range',
       key: 'pricePerSquareMeter',
       condition: [250, 300],
+      value: [50, 300],
     },
   ]
   const conditions3: TSubCondition[] = [
@@ -209,6 +212,7 @@ test('should pass condition check', done => {
       type: 'range',
       key: 'price',
       condition: [-1, -1],
+      value: [1000, 4000],
     },
   ]
   const res1 = handleConditions(conditions, apartment)
@@ -220,18 +224,20 @@ test('should pass condition check', done => {
   done()
 })
 
-test('should fail condition check', done => {
+test('should fail condition check', (done) => {
   const apartment = toCamelCase(EXAMPLE_APARTMENT_DATA) as any
   const conditions: TSubCondition[] = [
     {
       type: 'range',
       key: 'price',
       condition: [3500, 4100],
+      value: [1000, 4000],
     },
     {
       type: 'range',
       key: 'area',
       condition: [15, 20],
+      value: [10, 100],
     },
   ]
   const conditions2: TSubCondition[] = [
@@ -239,6 +245,7 @@ test('should fail condition check', done => {
       type: 'range',
       key: 'pricePerSquareMeter',
       condition: [200, 250],
+      value: [50, 1000],
     },
   ]
   const conditions3: TSubCondition[] = [
@@ -246,6 +253,7 @@ test('should fail condition check', done => {
       type: 'range',
       key: 'price',
       condition: [4510, 5000],
+      value: [1000, 4000],
     },
   ]
   const res1 = handleConditions(conditions, apartment)
