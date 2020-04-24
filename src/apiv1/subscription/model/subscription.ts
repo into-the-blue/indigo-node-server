@@ -38,9 +38,9 @@ const validator = {
   },
   userId: (userId: string) => typeof userId === 'string',
   conditions: (conditions: TSubCondition[]) => {
-    return conditions.every(con => {
+    return conditions.every((con) => {
       if (con.type === 'range') {
-        return con.condition.every(o => !isNaN(+o))
+        return con.condition.every((o) => !isNaN(+o))
       }
       if (con.type === 'boolean') {
         return typeof con.condition === 'boolean'
@@ -49,7 +49,7 @@ const validator = {
     })
   },
   coordinates: (coordinates: [number, number]) =>
-    coordinates.length === 2 && coordinates.every(o => !isNaN(o)),
+    coordinates.length === 2 && coordinates.every((o) => !isNaN(o)),
   payload: (
     payload: TSubscriptionPayload,
     instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'>
@@ -93,7 +93,7 @@ export class SubscriptionModel {
   }
 
   validate = () => {
-    const pass = Object.keys(this.instance).every(key =>
+    const pass = Object.keys(this.instance).every((key) =>
       validator[key](this.instance[key], this.instance)
     )
     if (!pass) throw new SubscriptionInvalidValue()
@@ -112,7 +112,7 @@ export class SubscriptionModel {
 
   update = () => {
     const toUpdate: any = {}
-    Object.keys(this.instance).forEach(key => {
+    Object.keys(this.instance).forEach((key) => {
       if (key === 'id') return
       if (this.instance[key]) {
         toUpdate[toCamelCase(key)] = this.instance[key]
@@ -120,7 +120,7 @@ export class SubscriptionModel {
     })
     return Mongo.DAO.Subscription.updateOne(
       {
-        _id: this.instance['id'],
+        _id: new ObjectId(this.instance['id']),
       },
       {
         $set: {
@@ -134,7 +134,7 @@ export class SubscriptionModel {
   static notify = async (apartmentId: string) => {
     const apartment = await Mongo.DAO.Apartment.findOne(apartmentId)
     const subsInRange = await findSubscriptionsInRange(apartment.coordinates)
-    const matched = subsInRange.filter(sub =>
+    const matched = subsInRange.filter((sub) =>
       handleConditions(sub.conditions, apartment)
     )
     return matched

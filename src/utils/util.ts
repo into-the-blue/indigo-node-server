@@ -1,11 +1,14 @@
 import { camelCase, snakeCase } from 'lodash'
 import Cluster from 'cluster'
 import { ObjectId } from 'bson'
+import { ObjectID } from 'mongodb'
+
 export const sleep = (time: number) =>
   new Promise((resolve) => setTimeout(resolve, time))
 
 const valuePreprocess = (value: any) => {
   if (value instanceof ObjectId) return value.toHexString()
+  if (value instanceof ObjectID) return value.toHexString()
   return value
 }
 

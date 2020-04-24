@@ -42,7 +42,7 @@ class SubscriptionController {
           user_id: new ObjectId(userId),
         },
       })
-      console.warn(userId, data)
+      console.warn(data.map(toCamelCase))
       return data.map(toCamelCase)
     } catch (err) {
       console.warn(err)
@@ -63,10 +63,8 @@ class SubscriptionController {
         success: true,
         message: 'none',
       }
-      console.warn('done')
     } catch (err) {
       if (err instanceof SubscriptionInvalidValue) {
-        console.warn('invalid')
         ctx.body = {
           success: false,
           message: 'Invalid value',
@@ -90,12 +88,17 @@ class SubscriptionController {
     const ins = new SubscriptionModel({
       ...body,
     })
-    await ins.update()
-    ctx.body = {
-      success: true,
-      message: 'none',
+    try {
+      await ins.update()
+      ctx.body = {
+        success: true,
+        message: 'none',
+      }
+      return ctx
+    } catch (err) {
+      console.warn(err)
+      throw err
     }
-    return ctx
   }
 }
 
