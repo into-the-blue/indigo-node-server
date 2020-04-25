@@ -57,3 +57,11 @@ export const isMaster = () => {
   if (Cluster.isMaster) return true
   return Cluster.worker.id === 1
 }
+
+export const isDevEnv = () => {
+  return process.env.NODE_ENV === 'dev'
+}
+
+export const isTestEnv = () => {
+  return process.env.NODE_ENV === 'test'
+}

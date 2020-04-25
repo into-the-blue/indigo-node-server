@@ -21,7 +21,7 @@ import { Mongo } from './db'
 import graphqlMiddleware from './graphql'
 import { createRateLimiter, setupPassport } from './middleware'
 import { setupDashBoard } from './dashboard'
-import { logger, randomString, isMaster } from './utils'
+import { logger, randomString, isMaster, isDevEnv } from './utils'
 import StartCronJob from './cronJobs'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
@@ -52,7 +52,7 @@ app.use(async (ctx, next) => {
   const requestId = randomString(10)
   try {
     console.time(requestId + ctx.url)
-    await rateLimiter.consume(ctx.ip)
+    if (!isDevEnv) await rateLimiter.consume(ctx.ip)
     await next()
   } catch (err) {
     if (err.remainingPoints === 0) {
