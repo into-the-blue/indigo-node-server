@@ -11,7 +11,7 @@ import { Mongo } from '@/db'
 import { SubscriptionModel } from '../model/subscription'
 import { Context } from 'koa'
 import { SubscriptionInvalidValue } from '../utils/errors'
-import { TSubCondition } from '@/types'
+import { TSubCondition, IMetroStation } from '@/types'
 import { toCamelCase } from '@/utils'
 import { ObjectId } from 'bson'
 
@@ -20,13 +20,14 @@ type IAddSubBody = {
   city: string
   radius: number
   conditions: TSubCondition[]
+  address: string
 } & (
   | {
-      address: string
       type: 'customLocation'
+      payload?: any
     }
   | {
-      stationId: string
+      payload: IMetroStation
       type: 'metroStation'
     }
 )

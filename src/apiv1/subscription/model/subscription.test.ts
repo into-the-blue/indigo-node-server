@@ -25,7 +25,10 @@ test('should insert one subscription', async (done) => {
     type: 'metroStation',
     city: 'shanghai',
     radius: 500,
-    stationId: '5020043128392410',
+    payload: {
+      stationId: '5020043128392410',
+    },
+    address: '静安寺',
     userId: '5e64c11a7a189568b8525d27',
     conditions: [
       {
@@ -49,8 +52,9 @@ test('should insert one subscription', async (done) => {
   expect(res.length).toBe(1)
   expect(sub.city).toBe(data.city)
   expect(sub.id).toBeDefined()
+  expect(sub.address).toBe(data.address)
   expect(sub.payload).toEqual({
-    stationId: data.stationId,
+    stationId: data.payload.stationId,
   })
   expect(sub.userId).toBeDefined()
   expect(sub.coordinates).toEqual(data.coordinates)
@@ -68,7 +72,10 @@ test('should pass validation', (done) => {
     type: 'metroStation',
     city: 'shanghai',
     radius: 500,
-    stationId: '5020043128392410',
+    address: '静安寺',
+    payload: {
+      stationId: '5020043128392410',
+    },
     userId: '5e64c11a7a189568b8525d27',
     conditions: [
       {
@@ -128,7 +135,10 @@ test('should update subscription', async (done) => {
     type: 'metroStation',
     city: 'shanghai',
     radius: 500,
-    stationId: '5020043128392410',
+    address: '静安寺',
+    payload: {
+      stationId: '5020043128392410',
+    },
     userId: '5e64c11a7a189568b8525d27',
     conditions: [
       {

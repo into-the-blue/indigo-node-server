@@ -23,6 +23,9 @@ export class SubscriptionEntity {
   type: 'metroStation' | 'customLocation'
 
   @Column()
+  address: string
+
+  @Column()
   payload: object
 
   @Column()

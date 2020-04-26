@@ -1,5 +1,10 @@
 import { Mongo } from '@/db'
-import { ISubscription, TSubCondition, TSubscriptionPayload } from '@/types'
+import {
+  ISubscription,
+  TSubCondition,
+  TSubscriptionPayload,
+  IMetroStation,
+} from '@/types'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { toSnakeCase, toCamelCase } from '@/utils'
 import { findSubscriptionsInRange, handleConditions } from './helper'
@@ -11,7 +16,8 @@ type TInitialProps =
       type: 'metroStation'
       city: string
       radius: number
-      stationId: string
+      address: string
+      payload: IMetroStation
       userId: string
       conditions: TSubCondition[]
     }
@@ -22,6 +28,7 @@ type TInitialProps =
       city: string
       radius: number
       address: string
+      payload?: any
       userId: string
       conditions: TSubCondition[]
     }
@@ -50,20 +57,22 @@ const validator = {
   },
   coordinates: (coordinates: [number, number]) =>
     coordinates.length === 2 && coordinates.every((o) => !isNaN(o)),
+  address: (address: string) => typeof address === 'string',
   payload: (
     payload: TSubscriptionPayload,
     instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'>
   ) => {
     if (instance.type === 'metroStation')
       return typeof payload['stationId'] === 'string'
-    if (instance.type === 'customLocation')
-      return typeof payload['address'] === 'string'
+    if (instance.type === 'customLocation') return true
     return false
   },
 }
 
 export class SubscriptionModel {
-  instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'>
+  instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'> & {
+    address: string
+  }
 
   constructor(props: TInitialProps) {
     const {
@@ -74,6 +83,8 @@ export class SubscriptionModel {
       userId,
       conditions,
       id,
+      payload,
+      address,
       ...restProps
     } = props
     this.instance = {
@@ -83,8 +94,10 @@ export class SubscriptionModel {
       radius,
       userId,
       conditions,
+      address,
       payload: {
         ...restProps,
+        ...payload,
       },
     }
     if (id) {

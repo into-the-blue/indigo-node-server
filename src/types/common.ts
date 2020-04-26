@@ -276,6 +276,7 @@ export type TSubscriptionPayload =
     };
 
 export interface ISubscription {
+  id?: string;
   coordinates: [number, number];
   type: 'metroStation' | 'customLocation';
   payload: TSubscriptionPayload;
