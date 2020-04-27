@@ -144,6 +144,18 @@ export class SubscriptionModel {
     )
   }
 
+  static delete = async (id: string, user_id: string) => {
+    const res = await Mongo.DAO.Subscription.deleteOne({
+      _id: new ObjectId(id),
+      user_id: new ObjectId(user_id),
+    })
+
+    return {
+      success: res.result.ok === 1,
+      deletedCount: res.deletedCount,
+    }
+  }
+
   static notify = async (apartmentId: string) => {
     const apartment = await Mongo.DAO.Apartment.findOne(apartmentId)
     const subsInRange = await findSubscriptionsInRange(apartment.coordinates)

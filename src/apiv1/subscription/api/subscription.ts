@@ -6,6 +6,7 @@ import {
   Get,
   Body,
   Ctx,
+  Delete,
 } from 'routing-controllers'
 import { Mongo } from '@/db'
 import { SubscriptionModel } from '../model/subscription'
@@ -100,6 +101,14 @@ class SubscriptionController {
       console.warn(err)
       throw err
     }
+  }
+
+  @Delete('/subscription')
+  async deleteSubscription(@Body() body: any, @Ctx() ctx: Context) {
+    const { id } = ctx.query
+    const res = await SubscriptionModel.delete(id, ctx.user.userId)
+    ctx.body = res
+    return ctx
   }
 }
 

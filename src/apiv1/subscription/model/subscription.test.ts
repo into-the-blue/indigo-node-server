@@ -129,6 +129,40 @@ test('should fail validation', (done) => {
   done()
 })
 
+test('should delete subscription', async (done) => {
+  const data = {
+    coordinates: [121.485468, 31.227375],
+    type: 'metroStation',
+    city: 'shanghai',
+    radius: 500,
+    address: '静安寺',
+    payload: {
+      stationId: '5020043128392410',
+    },
+    userId: '5e64c11a7a189568b8525d27',
+    conditions: [
+      {
+        type: 'range',
+        key: 'price',
+        condition: [-1, 5000],
+      },
+      {
+        type: 'boolean',
+        key: 'bed',
+        condition: true,
+      },
+    ],
+  }
+  const id = await new SubscriptionModel(data as any).save()
+  const res = await SubscriptionModel.delete(
+    id.insertedId.toHexString(),
+    data.userId
+  )
+  expect(res.success).toBe(true)
+  expect(res.deletedCount).toBe(1)
+  done()
+})
+
 test('should update subscription', async (done) => {
   const data = {
     coordinates: [121.485468, 31.227375],
