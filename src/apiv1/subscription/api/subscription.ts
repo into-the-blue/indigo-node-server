@@ -44,7 +44,6 @@ class SubscriptionController {
           user_id: new ObjectId(userId),
         },
       })
-      console.warn(data.map(toCamelCase))
       return data.map(toCamelCase)
     } catch (err) {
       console.warn(err)
