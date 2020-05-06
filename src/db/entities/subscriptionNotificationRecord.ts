@@ -1,9 +1,9 @@
 import { Entity, ObjectIdColumn, Column, ObjectID } from 'typeorm'
 
 @Entity({
-  name: 'subscriptionNotificationHistorys',
+  name: 'subscriptionNotificationRecords',
 })
-export default class SubscriptionNotificationHistory {
+export class SubscriptionNotificationRecordEntity {
   @ObjectIdColumn({ name: '_id' })
   id: ObjectID
 
@@ -21,6 +21,9 @@ export default class SubscriptionNotificationHistory {
 
   @ObjectIdColumn({ name: 'location_id' })
   locationId: ObjectID
+
+  @Column()
+  feedback: string
   //   @Column({ type: 'boolean', default: false })
   //   success: boolean
 

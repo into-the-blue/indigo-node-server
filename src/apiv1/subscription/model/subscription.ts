@@ -70,7 +70,10 @@ const validator = {
 }
 
 export class SubscriptionModel {
-  instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'> & {
+  instance: Omit<
+    ISubscription,
+    'id' | 'createdAt' | 'updatedAt' | 'deleted'
+  > & {
     address: string
   }
 
@@ -145,14 +148,18 @@ export class SubscriptionModel {
   }
 
   static delete = async (id: string, user_id: string) => {
-    const res = await Mongo.DAO.Subscription.deleteOne({
+    const res = await Mongo.DAO.Subscription.updateOne({
       _id: new ObjectId(id),
       user_id: new ObjectId(user_id),
+    },{
+      $set:{
+        deleted:true
+      }
     })
 
     return {
       success: res.result.ok === 1,
-      deletedCount: res.deletedCount,
+      deletedCount: res.upsertedCount,
     }
   }
 
@@ -162,6 +169,7 @@ export class SubscriptionModel {
     const matched = subsInRange.filter((sub) =>
       handleConditions(sub.conditions, apartment)
     )
+    
     return matched
   }
 }

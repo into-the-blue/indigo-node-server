@@ -28,6 +28,9 @@ export class SubscriptionEntity {
   @Column()
   payload: object
 
+  @Column({ type: 'boolean', default: false })
+  deleted: boolean
+
   @Column()
   city: string
 

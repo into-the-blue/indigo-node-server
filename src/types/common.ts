@@ -286,6 +286,7 @@ export interface ISubscription {
   userId: string
   city: string
   address: string
+  deleted: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -296,13 +297,31 @@ export interface ISubscriptionClient extends ISubscription {
   popuparity: number
 }
 
-export interface ISubscriptionSetting {
-  maximumSubscriptions: number | -1
-  type: '5' | '7' | '14' | '30' | 'friend'
+export type TMemberType = '5' | '7' | '14' | '30' | 'friend'
+
+export interface IMemberSetting {
+  type: TMemberType
   smsEnable: boolean
   emailEnable: boolean
+  wechatEnable: boolean
   notificationEnable: boolean
   userId: string
+  maxSubscriptionCount: number | -1
+  maxNotificationCount: number | -1
+  maxSmsCount: number | -1
+  createdAt: Date
+  updatedAt: Date
+  expireAt: Date
+}
+
+export type TMemberPurchaseSource= 'purchase' | 'gift' | 'activity'
+export interface IMemberPurchaseRecord {
+  userId: string
+  price: number
+  discount: number | null
+  type: TMemberType
+  createdAt: Date
+  source: TMemberPurchaseSource
 }
 
 export interface ICustomLocation {
@@ -316,13 +335,14 @@ export interface ICustomLocation {
   geoInfo: IGeoInfoAMap
 }
 
-export interface ISubscriptionNotificationHistory {
+export interface ISubscriptionNotificationRecord {
   userId: string
   subscriptionId: string
   apartmentId: string
   locationId: string
   createdAt: Date
   updatedAt: Date
+  feedback: 'good' | 'moderate' | 'bad' | string
   // success: boolean
   viewed: boolean
 }

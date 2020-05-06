@@ -1,7 +1,7 @@
 import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm'
 
 @Entity({ name: 'customLocations' })
-export default class CustomLocation {
+export class CustomLocationEntity {
   @ObjectIdColumn({ name: '_id' })
   id: ObjectID
 

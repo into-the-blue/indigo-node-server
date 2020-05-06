@@ -15,6 +15,7 @@ import { SubscriptionInvalidValue } from '../utils/errors'
 import { TSubCondition, IMetroStation } from '@/types'
 import { toCamelCase } from '@/utils'
 import { ObjectId } from 'bson'
+import { DAO } from '@/db/mongo'
 
 type IAddSubBody = {
   coordinates: [number, number]
@@ -42,6 +43,7 @@ class SubscriptionController {
       const data = await Mongo.DAO.Subscription.find({
         where: {
           user_id: new ObjectId(userId),
+          deleted: false,
         },
       })
       return data.map(toCamelCase)
@@ -108,6 +110,12 @@ class SubscriptionController {
     const res = await SubscriptionModel.delete(id, ctx.user.userId)
     ctx.body = res
     return ctx
+  }
+
+  @Post('/subscription/notify')
+  async onNewApartment(@Body() body: any, @Ctx() ctx: Context) {
+    const { apartment_id } = body
+    await SubscriptionModel.notify(apartment_id)
   }
 }
 
