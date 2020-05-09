@@ -1,5 +1,5 @@
 import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm'
-import { TSubCondition } from '@/types'
+import { TSubCondition, TSubscriptionPayload } from '@/types'
 @Entity({ name: 'subscriptions' })
 export class SubscriptionEntity {
   @ObjectIdColumn({ name: '_id' })
@@ -26,7 +26,7 @@ export class SubscriptionEntity {
   address: string
 
   @Column()
-  payload: object
+  payload: TSubscriptionPayload
 
   @Column({ type: 'boolean', default: false })
   deleted: boolean

@@ -274,6 +274,7 @@ export type TSubscriptionPayload =
   | Pick<IMetroStation, 'stationId' | 'stationName'>
   | {
       address: string
+      customLocationId: string
     }
 
 export interface ISubscription {
@@ -297,7 +298,13 @@ export interface ISubscriptionClient extends ISubscription {
   popuparity: number
 }
 
-export type TMemberType = '5' | '7' | '14' | '30' | 'friend'
+export type TMemberType =
+  | '5'
+  | '14'
+  | '30'
+  | 'friend'
+  | 'sponsor'
+  | 'lifelongMember'
 
 export interface IMemberInfo {
   type: TMemberType
@@ -306,9 +313,11 @@ export interface IMemberInfo {
   wechatEnable: boolean
   notificationEnable: boolean
   userId: string
-  maxSubscriptionCount: number | -1
-  maxNotificationCount: number | -1
-  maxSmsCount: number | -1
+  subscriptionQuota: number | -1
+  notificationQuota: number | -1
+  smsNotifyQuota: number | -1
+  wechatNotifyQuota: number | -1
+  maxEmailNotifyCount: number | -1
   createdAt: Date
   updatedAt: Date
   expireAt: Date
@@ -335,6 +344,7 @@ export interface ICustomLocation {
   geoInfo: IGeoInfoAMap
 }
 
+export type TSubscriptionNotificationPriority = 0 | 1 | 2 | 3 | 4
 export interface ISubscriptionNotificationRecord {
   userId: string
   subscriptionId: string
@@ -342,9 +352,16 @@ export interface ISubscriptionNotificationRecord {
   locationId: string
   createdAt: Date
   updatedAt: Date
-  feedback: 'good' | 'moderate' | 'bad' | string
+  feedback: 'good' | 'moderate' | 'bad'
+  feedbackDetail: string
   // success: boolean
   viewed: boolean
+
+  wechatNotifyEnable: boolean
+  emailNotifyEnable: boolean
+  smsNotifyEnable: boolean
+  // friend | (sponsor | lifelongMember) | 5 | 14 | 30
+  priority: TSubscriptionNotificationPriority
 }
 
 export interface ICustomLocation {

@@ -26,14 +26,20 @@ export class MemberInfoEntity {
   @Column({ name: 'notification_enable', type: 'boolean' })
   notificationEnable: boolean
 
-  @Column({ name: 'max_subscription_count', type: 'int' })
-  maxSubscriptionCount: number
+  @Column({ name: 'subscription_quota', type: 'int', default: 0 })
+  subscriptionQuota: number
 
-  @Column({ name: 'max_notification_count', type: 'int' })
-  maxNotificationCount: number
+  @Column({ name: 'notification_quota', type: 'int', default: 0 })
+  notificationQuota: number
 
-  @Column({ name: 'max_sms_count', type: 'int' })
-  maxSmsCount: number
+  @Column({ name: 'sms_notify_quota', type: 'int', default: 0 })
+  smsNotifyQuota: number
+
+  @Column({ name: 'email_notify_quota', type: 'int', default: 0 })
+  emailNotifyQuota: number
+
+  @Column({ name: 'wechat_notify_quota', type: 'int', default: 0 })
+  wechatNotifyQuota: number
 
   @Column({ name: 'expire_at', type: 'date' })
   expireAt: Date

@@ -166,6 +166,10 @@ export const handleConditions = (
   apartment: ApartmentEntity
 ) => conditions.every(_handleCondition(apartment))
 
+const _notificationEnable = (quota: number, used: number, enable: boolean) => {
+  if (!enable) return false
+  return quota === -1 || quota > used
+}
 export const handleMemberSetting = (
   setting: MemberInfoEntity,
   notificationRecords: SubscriptionNotificationRecordEntity[]
@@ -173,11 +177,50 @@ export const handleMemberSetting = (
   const {
     smsEnable,
     emailEnable,
-    maxNotificationCount,
-    maxSmsCount,
-    maxSubscriptionCount,
+    wechatEnable,
+    notificationQuota,
+    smsNotifyQuota,
+    emailNotifyQuota,
+    wechatNotifyQuota,
   } = setting
+  let wechatNotificationCount = 0
+  let smsNotifyCount = 0
+  let emailNotifyCount = 0
+
+  if (notificationQuota === -1) {
+    return {
+      wechatNotifyEnable: true,
+      emailNotifyEnable: true,
+      smsNotifyEnable: true,
+    }
+  }
+  if (notificationRecords.length >= notificationQuota) {
+    return {
+      wechatNotifyEnable: false,
+      emailNotifyEnable: false,
+      smsNotifyEnable: false,
+    }
+  }
+  notificationRecords.forEach((record) => {
+    if (record.wechatNotifyEnable) wechatNotificationCount += 1
+    if (record.emailNotifyEnable) emailNotifyCount += 1
+    if (record.smsNotifyEnable) smsNotifyCount += 1
+  })
   return {
-    notify: maxNotificationCount < notificationRecords.length,
+    wechatNotifyEnable: _notificationEnable(
+      wechatNotifyQuota,
+      wechatNotificationCount,
+      wechatEnable
+    ),
+    emailNotifyEnable: _notificationEnable(
+      emailNotifyQuota,
+      emailNotifyCount,
+      emailEnable
+    ),
+    smsNotifyEnable: _notificationEnable(
+      smsNotifyQuota,
+      smsNotifyCount,
+      smsEnable
+    ),
   }
 }

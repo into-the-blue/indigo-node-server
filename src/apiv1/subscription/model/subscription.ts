@@ -13,6 +13,7 @@ import {
   handleMemberSetting,
 } from './helper'
 import { ObjectId } from 'bson'
+import { DAO } from '@/db/mongo'
 type TInitialProps =
   | {
       id?: string
@@ -177,11 +178,34 @@ export class SubscriptionModel {
     const matched = subsInRange.filter((sub) =>
       handleConditions(sub.conditions, apartment)
     )
-    // filter out users that reached notification quota
-    const ableToSendNotification = matched.filter((sub) =>
-      handleMemberSetting(sub.memberInfo, sub.notificationRecords)
+    // check if users reached notification quota
+    const notifications = matched.map((sub) => {
+      const enables = handleMemberSetting(
+        sub.memberInfo,
+        sub.notificationRecords
+      )
+
+      return {
+        wechat_notify_enable: enables.wechatNotifyEnable,
+        email_notify_enable: enables.emailNotifyEnable,
+        sms_notify_enable: enables.smsNotifyEnable,
+        location_id:
+          sub.payload['stationId'] || sub.payload['customLocationId'],
+        apartment_id: apartment.id,
+        subscription_id: sub.id,
+        user_id: sub.userId,
+      }
+    })
+    await DAO.SubscriptionNotificationRecord.insertMany(notifications)
+
+    const notificationEnabled = notifications.filter(
+      (o) =>
+        o.wechat_notify_enable || o.email_notify_enable || o.sms_notify_enable
     )
-    //
-    return ableToSendNotification
+
+    // add into agendas
+    // order notifications by member level
+
+    return notificationEnabled
   }
 }
