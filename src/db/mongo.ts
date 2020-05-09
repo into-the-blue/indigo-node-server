@@ -11,6 +11,10 @@ import {
   StationEntity,
   UserEntity,
   SubscriptionEntity,
+  CustomLocationEntity,
+  MemberInfoEntity,
+  MemberPurchaseRecordEntity,
+  SubscriptionNotificationRecordEntity,
 } from './entities'
 // configurations of mongo db
 const getBaseMongoConfig = (): ConnectionOptions => ({
@@ -66,12 +70,18 @@ const ensureIndexes = async () => {
     },
   ]
   await Promise.all(
-    apartmentIndexes.map(idx => DAO.Apartment.createCollectionIndex(idx))
+    apartmentIndexes.map((idx) => DAO.Apartment.createCollectionIndex(idx))
   )
   await Promise.all(
-    subscriptionIndexes.map(idx => DAO.Subscription.createCollectionIndex(idx))
+    subscriptionIndexes.map((idx) =>
+      DAO.Subscription.createCollectionIndex(idx)
+    )
   )
   await DAO.Station.createCollectionIndex({
+    coordinates: '2dsphere',
+  })
+
+  await DAO.CustomLocation.createCollectionIndex({
     coordinates: '2dsphere',
   })
 }
@@ -109,5 +119,21 @@ export class DAO {
 
   static get Subscription() {
     return getMongoRepository(SubscriptionEntity)
+  }
+
+  static get CustomLocation() {
+    return getMongoRepository(CustomLocationEntity)
+  }
+
+  static get MemberSetting() {
+    return getMongoRepository(MemberInfoEntity)
+  }
+
+  static get MemberPurchaseRecord() {
+    return getMongoRepository(MemberPurchaseRecordEntity)
+  }
+
+  static get SubscriptionNotificationRecord() {
+    return getMongoRepository(SubscriptionNotificationRecordEntity)
   }
 }

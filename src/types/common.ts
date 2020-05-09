@@ -299,7 +299,7 @@ export interface ISubscriptionClient extends ISubscription {
 
 export type TMemberType = '5' | '7' | '14' | '30' | 'friend'
 
-export interface IMemberSetting {
+export interface IMemberInfo {
   type: TMemberType
   smsEnable: boolean
   emailEnable: boolean

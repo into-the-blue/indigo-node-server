@@ -1,33 +1,100 @@
 import { Mongo } from '@/db'
 import { TSubCondition } from '@/types'
-import { SubscriptionEntity, ApartmentEntity } from '@/db/entities'
+import {
+  SubscriptionEntity,
+  ApartmentEntity,
+  MemberInfoEntity,
+  SubscriptionNotificationRecordEntity,
+} from '@/db/entities'
 import { toCamelCase } from '@/utils'
+import moment from 'moment'
 
 export const findSubscriptionsInRange = async (
   coordinates: [number, number]
-): Promise<SubscriptionEntity[]> => {
-  const data = await Mongo.DAO.Subscription.aggregate([
-    {
-      $geoNear: {
-        near: {
-          type: 'Point',
-          coordinates: coordinates,
+): Promise<
+  (SubscriptionEntity & {
+    memberInfo: MemberInfoEntity
+    notificationRecords: SubscriptionNotificationRecordEntity[]
+  })[]
+> => {
+  const geoNear = {
+    $geoNear: {
+      near: {
+        type: 'Point',
+        coordinates: coordinates,
+      },
+      sipherical: true,
+      distanceField: 'distance',
+    },
+  }
+  const redact = {
+    $redact: {
+      $cond: {
+        if: {
+          $lte: ['$distance', '$radius'],
         },
-        sipherical: true,
-        distanceField: 'distance',
+        then: '$$KEEP',
+        else: '$$PRUNE',
       },
     },
-    {
-      $redact: {
-        $cond: {
-          if: {
-            $lte: ['$distance', '$radius'],
+  }
+  const lookupMemberInfo = {
+    $lookup: {
+      from: 'memberInfos',
+      localField: 'user_id',
+      foreignField: 'user_id',
+      as: 'memberInfo',
+    },
+  }
+  // find records in this month
+  const lookupNotificationRecords = {
+    $lookup: {
+      from: 'subscriptionNotificationRecords',
+      let: { s_subscription_id: '$_id' },
+      pipeline: [
+        {
+          $match: {
+            created_at: {
+              $gte: new Date(moment().set('day', 1).format('YYYY-MM-DD')),
+            },
+            $expr: {
+              $eq: ['$subscription_id', '$$s_subscription_id'],
+            },
           },
-          then: '$$KEEP',
-          else: '$$PRUNE',
         },
-      },
+      ],
+      as: 'notificationRecords',
     },
+  }
+  const unwindMemberInfo = {
+    $unwind: {
+      path: '$memberInfo',
+      preserveNullAndEmptyArrays: true,
+    },
+  }
+  const project = {
+    $project: {
+      type: 1,
+      coordiantes: 1,
+      city: 1,
+      radius: 1,
+      user_id: 1,
+      conditions: 1,
+      address: 1,
+      payload: 1,
+      created_at: 1,
+      updated_at: 1,
+      notificationRecords: 1,
+      memberInfo: { $ifNull: ['$memberInfo', {}] },
+    },
+  }
+  const data = await Mongo.DAO.Subscription.aggregate([
+    geoNear,
+    redact,
+    lookupMemberInfo,
+    unwindMemberInfo,
+    lookupNotificationRecords,
+    project,
   ]).toArray()
   return data.map(toCamelCase)
 }
@@ -98,3 +165,19 @@ export const handleConditions = (
   conditions: TSubCondition[],
   apartment: ApartmentEntity
 ) => conditions.every(_handleCondition(apartment))
+
+export const handleMemberSetting = (
+  setting: MemberInfoEntity,
+  notificationRecords: SubscriptionNotificationRecordEntity[]
+) => {
+  const {
+    smsEnable,
+    emailEnable,
+    maxNotificationCount,
+    maxSmsCount,
+    maxSubscriptionCount,
+  } = setting
+  return {
+    notify: maxNotificationCount < notificationRecords.length,
+  }
+}

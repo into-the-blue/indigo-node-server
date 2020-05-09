@@ -13,7 +13,7 @@ import { SubscriptionModel } from '../model/subscription'
 import { Context } from 'koa'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { TSubCondition, IMetroStation } from '@/types'
-import { toCamelCase } from '@/utils'
+import { toCamelCase, RESP_CODES } from '@/utils'
 import { ObjectId } from 'bson'
 import { DAO } from '@/db/mongo'
 
@@ -46,7 +46,12 @@ class SubscriptionController {
           deleted: false,
         },
       })
-      return data.map(toCamelCase)
+      ctx.body = {
+        data: data.map(toCamelCase),
+        success: true,
+        message: 'none',
+        code: RESP_CODES.OK,
+      }
     } catch (err) {
       console.warn(err)
       throw err
@@ -65,12 +70,14 @@ class SubscriptionController {
       ctx.body = {
         success: true,
         message: 'none',
+        code: RESP_CODES.OK,
       }
     } catch (err) {
       if (err instanceof SubscriptionInvalidValue) {
         ctx.body = {
           success: false,
           message: 'Invalid value',
+          code: RESP_CODES.INVALID_INPUTS,
         }
       } else {
         throw err
@@ -85,6 +92,7 @@ class SubscriptionController {
       ctx.body = {
         success: false,
         message: 'Subscription id is mandatory',
+        code: RESP_CODES.VALUE_MISSING,
       }
       return ctx
     }
@@ -96,6 +104,7 @@ class SubscriptionController {
       ctx.body = {
         success: true,
         message: 'none',
+        code: RESP_CODES.OK,
       }
       return ctx
     } catch (err) {

@@ -7,7 +7,11 @@ import {
 } from '@/types'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { toSnakeCase, toCamelCase } from '@/utils'
-import { findSubscriptionsInRange, handleConditions } from './helper'
+import {
+  findSubscriptionsInRange,
+  handleConditions,
+  handleMemberSetting,
+} from './helper'
 import { ObjectId } from 'bson'
 type TInitialProps =
   | {
@@ -148,14 +152,17 @@ export class SubscriptionModel {
   }
 
   static delete = async (id: string, user_id: string) => {
-    const res = await Mongo.DAO.Subscription.updateOne({
-      _id: new ObjectId(id),
-      user_id: new ObjectId(user_id),
-    },{
-      $set:{
-        deleted:true
+    const res = await Mongo.DAO.Subscription.updateOne(
+      {
+        _id: new ObjectId(id),
+        user_id: new ObjectId(user_id),
+      },
+      {
+        $set: {
+          deleted: true,
+        },
       }
-    })
+    )
 
     return {
       success: res.result.ok === 1,
@@ -166,10 +173,15 @@ export class SubscriptionModel {
   static notify = async (apartmentId: string) => {
     const apartment = await Mongo.DAO.Apartment.findOne(apartmentId)
     const subsInRange = await findSubscriptionsInRange(apartment.coordinates)
+    // filter out subscriptions not matched
     const matched = subsInRange.filter((sub) =>
       handleConditions(sub.conditions, apartment)
     )
-    
-    return matched
+    // filter out users that reached notification quota
+    const ableToSendNotification = matched.filter((sub) =>
+      handleMemberSetting(sub.memberInfo, sub.notificationRecords)
+    )
+    //
+    return ableToSendNotification
   }
 }

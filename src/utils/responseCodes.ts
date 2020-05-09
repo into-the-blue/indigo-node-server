@@ -1,0 +1,5 @@
+export enum RESP_CODES {
+  OK = 1,
+  VALUE_MISSING = 101,
+  INVALID_INPUTS = 102,
+}
