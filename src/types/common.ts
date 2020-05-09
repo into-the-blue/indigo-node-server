@@ -314,7 +314,7 @@ export interface IMemberInfo {
   expireAt: Date
 }
 
-export type TMemberPurchaseSource= 'purchase' | 'gift' | 'activity'
+export type TMemberPurchaseSource = 'purchase' | 'gift' | 'activity'
 export interface IMemberPurchaseRecord {
   userId: string
   price: number
@@ -350,4 +350,27 @@ export interface ISubscriptionNotificationRecord {
 export interface ICustomLocation {
   address: string
   coordinates: [number, number]
+}
+
+export interface IUserAuthData {
+  unionId: string
+  openId: string
+}
+
+export type TRegistrationType = 'wechat'
+export interface IUser {
+  username: string
+  realName: string | null
+  avatar: string
+  authData: IUserAuthData
+  gender: 0 | 1 | 2
+  registrationType: TRegistrationType
+  phoneNumber: string | null
+  country: string
+  province: string
+  city: string
+  email: string | null
+  language: string
+  createdAt: Date
+  updatedAt: Date
 }

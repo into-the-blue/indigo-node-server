@@ -89,6 +89,7 @@ export default class UserController {
         avatar: avatarUrl,
         city,
         province,
+        language,
         updated_at: new Date(),
       }
       let userId: string

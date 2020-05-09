@@ -1,5 +1,5 @@
 import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm'
-type TRegistrationType = 'wechat'
+import { TRegistrationType } from '@/types'
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -9,7 +9,7 @@ export class UserEntity {
   @Column({ type: 'string', nullable: false })
   username: string
 
-  @Column({ name: 'real_name', type: 'string' })
+  @Column({ name: 'real_name', type: 'string', default: null })
   realName
 
   @Column({ type: 'string' })
@@ -35,6 +35,12 @@ export class UserEntity {
 
   @Column({ type: 'string' })
   city: string
+
+  @Column({ type: 'string', default: null })
+  email: string
+
+  @Column({ type: 'string' })
+  language: string
 
   @Column({ name: 'created_at', type: 'date', default: Date.now() })
   createdAt: Date
