@@ -21,6 +21,9 @@ const main = async () => {
       },
       sipherical: true,
       distanceField: 'distance',
+      query: {
+        deleted: false,
+      },
     },
   }
   const redact = {

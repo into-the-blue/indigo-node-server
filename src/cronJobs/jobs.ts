@@ -6,15 +6,17 @@ import { map, mergeMap, switchMap } from 'rxjs/operators'
 import { mean } from 'lodash'
 import { ApartmentEntity } from '@/db/entities'
 import { logger, toCamelCase } from '@/utils'
+import { DAO } from '@/db/mongo'
 export const CRON_JOBS = {
   computeApartments: 'computeApartments',
   queryApartmentsToCompute: 'queryApartmentsToCompute',
+  sendSubscriptionNotification: 'sendSubscriptionNotification',
 }
 
 const RANGE = 500
 
 const median = (arr: number[]): number => {
-  const isOdd = arr.length % 2 !== 0
+  const isOdd = arr.length % 2 === 1
   if (isOdd) return arr[(arr.length + 1) / 2]
   return +((arr[arr.length / 2] + arr[arr.length / 2 + 1]) / 2).toFixed(2)
 }
@@ -22,15 +24,15 @@ const median = (arr: number[]): number => {
 const compute = (apts: ApartmentEntity[], target: ApartmentEntity) => {
   const total = apts.length
   const prices = apts
-    .map(a => a.price)
+    .map((a) => a.price)
     .concat(target.price)
     .sort((a, b) => a - b)
   const PPSM = apts
-    .map(a => a.pricePerSquareMeter)
+    .map((a) => a.pricePerSquareMeter)
     .concat(target.pricePerSquareMeter)
     .sort((a, b) => a - b)
   const areas = apts
-    .map(a => a.area)
+    .map((a) => a.area)
     .concat(target.area)
     .sort((a, b) => a - b)
   const averagePrice = +mean(prices).toFixed(2)
@@ -44,9 +46,9 @@ const compute = (apts: ApartmentEntity[], target: ApartmentEntity) => {
   const medianPrice = median(prices)
   const medianArea = median(areas)
 
-  const lowestPPSM = (apts.find(a => a.pricePerSquareMeter === PPSM[0]) || {})
+  const lowestPPSM = (apts.find((a) => a.pricePerSquareMeter === PPSM[0]) || {})
     .id
-  const lowestPrice = (apts.find(a => a.price === prices[0]) || {}).id
+  const lowestPrice = (apts.find((a) => a.price === prices[0]) || {}).id
   return {
     updatedAt: new Date(),
     averagePrice,
@@ -90,15 +92,15 @@ const findApartmentsNearby = (coordinates: number[], range: number) =>
 
 const computeSingleApartment = (apartment: ApartmentEntity) =>
   from(findApartmentsNearby(apartment.coordinates, RANGE)).pipe(
-    map(apts => apts.map(toCamelCase)),
-    map(apts => {
+    map((apts) => apts.map(toCamelCase)),
+    map((apts) => {
       const res = compute(apts, apartment)
       return {
         ...res,
         range: RANGE,
       }
     }),
-    switchMap(computed =>
+    switchMap((computed) =>
       Mongo.DAO.Apartment.updateOne(
         { _id: apartment.id },
         {
@@ -111,59 +113,95 @@ const computeSingleApartment = (apartment: ApartmentEntity) =>
     )
   )
 
-const findApartmentsToCompute = (limit: number = 1000): Promise<ApartmentEntity[]> =>
-  Mongo.DAO.Apartment.aggregate([
-    {
-      $match: {
-        coordinates: { $ne: null },
-        $and: [
-          {
-            expired: { $ne: true },
-          },
-          {
-            $or: [
-              {
-                computed: {
-                  $exists: false,
-                },
+const findApartmentsToCompute = (
+  limit: number = 1000
+): Promise<ApartmentEntity[]> => {
+  const match = {
+    $match: {
+      coordinates: { $ne: null },
+      $and: [
+        {
+          expired: { $ne: true },
+        },
+        {
+          $or: [
+            {
+              computed: {
+                $exists: false,
               },
-              {
-                'computed.updated_at': {
-                  $lte: new Date(
-                    Moment()
-                      .add(-25, 'hours')
-                      .toISOString()
-                  ),
-                },
+            },
+            {
+              'computed.updated_at': {
+                $lte: new Date(Moment().add(-25, 'hours').toISOString()),
               },
-            ],
-          },
-        ],
-      },
+            },
+          ],
+        },
+      ],
     },
-    {
-      $sort: {
-        updated_time: -1,
-      },
+  }
+  const sort = {
+    $sort: {
+      updated_time: -1,
     },
-    {
-      $project: {
-        area: 1,
-        price_per_square_meter: 1,
-        price: 1,
-        updated_time: 1,
-        coordinates: 1,
-      },
+  }
+  const project = {
+    $project: {
+      area: 1,
+      price_per_square_meter: 1,
+      price: 1,
+      updated_time: 1,
+      coordinates: 1,
     },
+  }
+  return Mongo.DAO.Apartment.aggregate([
+    match,
+    sort,
+    project,
     { $limit: limit },
   ]).toArray()
+}
 
 export default (agenda: Agenda) => {
+  agenda.define(CRON_JOBS.sendSubscriptionNotification, async (job, done) => {
+    const {
+      priority,
+      wechat_notify_enable,
+      email_notify_enable,
+      sms_notify_enable,
+      location_id,
+      apartment_id,
+      subscription_id,
+      user_id,
+      address,
+      price,
+      area,
+      house_type,
+      distance,
+    } = job.attrs.data
+    console.warn(CRON_JOBS.sendSubscriptionNotification, new Date())
+    const user = await DAO.User.findOne(user_id)
+    if (!user) return done(new Error('user not exists'))
+    const { email, phoneNumber } = user
+    const message = `您订阅的${address}附近${distance}米发现新房源了,快来查看吧~`
+    if (wechat_notify_enable) {
+      // send wechat notificaton
+    }
+    if (email_notify_enable) {
+      // send email notification
+    }
+    if (sms_notify_enable) {
+      // send sms notification
+    }
+
+    done()
+  })
+
   agenda.define(CRON_JOBS.computeApartments, (job, done) => {
     const { apartment } = job.attrs.data
     // logger.info('START JOB ' + CRON_JOBS.computeApartments)
     computeSingleApartment(apartment).subscribe({
-      error: err => {
+      error: (err) => {
         logger.error(err)
         done(err)
       },
@@ -178,49 +216,16 @@ export default (agenda: Agenda) => {
     logger.info('START JOB ' + CRON_JOBS.queryApartmentsToCompute)
     from(findApartmentsToCompute())
       .pipe(
-        switchMap(d => from(d)),
+        switchMap((d) => from(d)),
         map(toCamelCase),
-        mergeMap(apt =>
+        mergeMap((apt) =>
           agenda.now(CRON_JOBS.computeApartments, {
             apartment: apt,
           })
         )
-        // bufferCount(BATCH_SIZE),
-        // concatMap((as, batch) => {
-        //   return from(as).pipe(
-        //     mergeMap(apartment => {
-        //       return from(
-        //         findApartmentsNearby(apartment.coordinates, RANGE)
-        //       ).pipe(
-        //         map(apts => apts.map(toCamelCase)),
-        //         map(apts => {
-        //           const res = compute(apts, apartment)
-        //           return {
-        //             ...res,
-        //             range: RANGE,
-        //           }
-        //         }),
-        //         switchMap(computed =>
-        //           Mongo.DAO.Apartment.updateOne(
-        //             { _id: apartment.id },
-        //             {
-        //               $set: {
-        //                 computed,
-        //                 updated_at: new Date(),
-        //               },
-        //             }
-        //           )
-        //         )
-        //       )
-        //     }),
-        //     toArray(),
-        //     mapTo(batch)
-        //   )
-        // }),
-        // tap(_ => logger.info('done', _))
       )
       .subscribe({
-        error: err => {
+        error: (err) => {
           logger.error(err)
           done(err)
         },

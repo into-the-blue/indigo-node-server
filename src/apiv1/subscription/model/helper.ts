@@ -1,5 +1,9 @@
 import { Mongo } from '@/db'
-import { TSubCondition } from '@/types'
+import {
+  TSubCondition,
+  TMemberType,
+  TSubscriptionNotificationPriority,
+} from '@/types'
 import {
   SubscriptionEntity,
   ApartmentEntity,
@@ -15,6 +19,7 @@ export const findSubscriptionsInRange = async (
   (SubscriptionEntity & {
     memberInfo: MemberInfoEntity
     notificationRecords: SubscriptionNotificationRecordEntity[]
+    distance: number
   })[]
 > => {
   const geoNear = {
@@ -25,6 +30,9 @@ export const findSubscriptionsInRange = async (
       },
       sipherical: true,
       distanceField: 'distance',
+      query: {
+        deleted: false,
+      },
     },
   }
   const redact = {
@@ -222,5 +230,31 @@ export const handleMemberSetting = (
       smsNotifyCount,
       smsEnable
     ),
+  }
+}
+
+export const mapMemberTypeToPriority = (
+  type: TMemberType
+): TSubscriptionNotificationPriority => {
+  switch (type) {
+    case 'friend': {
+      return 0
+    }
+    case 'sponsor':
+    case 'lifelongMember': {
+      return 1
+    }
+    case '30': {
+      return 2
+    }
+    case '14': {
+      return 3
+    }
+    case '5': {
+      return 4
+    }
+    default: {
+      return 4
+    }
   }
 }

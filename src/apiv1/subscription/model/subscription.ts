@@ -11,9 +11,11 @@ import {
   findSubscriptionsInRange,
   handleConditions,
   handleMemberSetting,
+  mapMemberTypeToPriority,
 } from './helper'
 import { ObjectId } from 'bson'
 import { DAO } from '@/db/mongo'
+import { agenda, CRON_JOBS } from '@/cronJobs'
 type TInitialProps =
   | {
       id?: string
@@ -179,13 +181,15 @@ export class SubscriptionModel {
       handleConditions(sub.conditions, apartment)
     )
     // check if users reached notification quota
-    const notifications = matched.map((sub) => {
+    let notifications = []
+    let notificationEnabled = []
+    matched.forEach((sub) => {
       const enables = handleMemberSetting(
         sub.memberInfo,
         sub.notificationRecords
       )
-
-      return {
+      const obj = {
+        priority: mapMemberTypeToPriority(sub.memberInfo.type),
         wechat_notify_enable: enables.wechatNotifyEnable,
         email_notify_enable: enables.emailNotifyEnable,
         sms_notify_enable: enables.smsNotifyEnable,
@@ -195,16 +199,37 @@ export class SubscriptionModel {
         subscription_id: sub.id,
         user_id: sub.userId,
       }
+      notifications.push(obj)
+      if (
+        obj.wechat_notify_enable ||
+        obj.email_notify_enable ||
+        obj.sms_notify_enable
+      ) {
+        notificationEnabled.push({
+          ...obj,
+          address: sub.address,
+          price: apartment.price,
+          area: apartment.area,
+          house_type: apartment.houseType,
+          distance: sub.distance.toFixed(0),
+        })
+      }
     })
     await DAO.SubscriptionNotificationRecord.insertMany(notifications)
 
-    const notificationEnabled = notifications.filter(
-      (o) =>
-        o.wechat_notify_enable || o.email_notify_enable || o.sms_notify_enable
-    )
-
     // add into agendas
     // order notifications by member level
+    const prms = notificationEnabled.map((item) => {
+      if (item.priority === 0) {
+        return agenda.now(CRON_JOBS.sendSubscriptionNotification, item)
+      }
+      return agenda.schedule(
+        `in ${item.priority * 10} minutes`,
+        CRON_JOBS.sendSubscriptionNotification,
+        item
+      )
+    })
+    await Promise.all(prms)
 
     return notificationEnabled
   }
