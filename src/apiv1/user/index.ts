@@ -12,7 +12,7 @@ import {
 } from 'routing-controllers'
 import Koa from 'koa'
 import { Mongo } from '@/db'
-import {} from '@/utils'
+import { response, RESP_CODES } from '@/utils'
 @Authorized()
 @JsonController()
 export default class UserController {
@@ -21,7 +21,7 @@ export default class UserController {
     const { userId } = ctx.user
     const user = await Mongo.DAO.User.findOne(userId)
     if (!user) throw new NotFoundError()
-    ctx.body = user
+    ctx.body = response(RESP_CODES.OK, undefined, user)
     return ctx
   }
 }

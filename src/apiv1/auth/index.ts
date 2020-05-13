@@ -9,7 +9,7 @@ import {
 import Koa from 'koa'
 import { Mongo } from '@/db'
 import Axios from 'axios'
-import { WechatMpDecryptor, Jwt, Crypto } from '@/utils'
+import { WechatMpDecryptor, Jwt, Crypto, response, RESP_CODES } from '@/utils'
 
 const MP_APP_ID = process.env.INDIGO_MP_APP_ID
 const MP_SECRET = process.env.INDIGO_MP_SECRET
@@ -33,23 +33,36 @@ export default class UserController {
         }
       )
       const { session_key, openid } = data
-      ctx.body = {
+      ctx.body = response(RESP_CODES.OK, undefined, {
         sessionKey: session_key,
-      }
+      })
     }
     return ctx
   }
-
-  //   avatarUrl: "https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLVqgbS8xic3kVicibwk1OzSoVjdTkPClOiap1hTiboTpwUH8ro0R3wfnyJLeUqpA4A5wGSfUXIxVT664A/132"
-  // city: "Wuxi"
-  // country: "China"
-  // gender: 1
-  // language: "zh_CN"
-  // nickName: "Rick 杨同学"
-  // openId: "o-k
-  // province: "Jiangsu"
-  // unionId: "oYRi5w"
-  // watermark: {timestamp: 1583373792, appid: ""}
+  /**
+   *
+   *
+   * @param {Koa.Context} ctx
+   * @param {{
+   *       encryptedData: string
+   *       iv: string
+   *       sessionKey: string
+   *     }} body
+   * @returns
+   * @memberof UserController
+   *
+   *
+   *       avatarUrl: "https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLVqgbS8xic3kVicibwk1OzSoVjdTkPClOiap1hTiboTpwUH8ro0R3wfnyJLeUqpA4A5wGSfUXIxVT664A/132"
+   *       city: "Wuxi"
+   *       country: "China"
+   *       gender: 1
+   *       language: "zh_CN"
+   *       nickName: "Rick 杨同学"
+   *       openId: "o-k
+   *       province: "Jiangsu"
+   *       unionId: "oYRi5w"
+   *       watermark: {timestamp: 1583373792, appid: ""}
+   */
   @Post('/auth/wechat_auth')
   async wechatAuth(
     @Ctx() ctx: Koa.Context,
@@ -117,7 +130,7 @@ export default class UserController {
           }
         )
       }
-      ctx.body = {
+      ctx.body = response(RESP_CODES.OK, undefined, {
         userInfo: {
           username: userData.username,
           gendaer: userData.gender,
@@ -125,7 +138,7 @@ export default class UserController {
         },
         ...Jwt.generateTokens(userId),
         isNew: !existed,
-      }
+      })
 
       return ctx
     } catch (err) {
@@ -144,17 +157,11 @@ export default class UserController {
     const { refreshToken } = body
     const { err, result } = await Jwt.verify(refreshToken)
     if (err) {
-      ctx.body = {
-        success: false,
-        message: 'Refresh token expired',
-      }
+      ctx.body = response(RESP_CODES.ACCESS_TOKEN_EXPIRED)
       return ctx
     }
     const { userId } = Crypto.decrypt(result['token']) as any
     console.warn(userId)
-    return {
-      success: true,
-      ...Jwt.generateTokens(userId),
-    }
+    return response(RESP_CODES.OK, undefined, { ...Jwt.generateTokens(userId) })
   }
 }

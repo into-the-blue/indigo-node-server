@@ -12,4 +12,4 @@
 export * from './crypto'
 export * from './util'
 export * from './logger'
-export * from './responseCodes'
+export * from './httpResponse'
