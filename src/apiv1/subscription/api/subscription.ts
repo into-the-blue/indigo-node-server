@@ -13,9 +13,9 @@ import { SubscriptionModel } from '../model/subscription'
 import { Context } from 'koa'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { TSubCondition, IMetroStation } from '@/types'
-import { toCamelCase, RESP_CODES } from '@/utils'
+import { toCamelCase, RESP_CODES, response } from '@/utils'
 import { ObjectId } from 'bson'
-import { DAO } from '@/db/mongo'
+import moment from 'moment'
 
 type IAddSubBody = {
   coordinates: [number, number]
@@ -40,18 +40,63 @@ class SubscriptionController {
   async querySubscription(@Body() body: any, @Ctx() ctx: Context) {
     const userId = ctx.user.userId
     try {
-      const data = await Mongo.DAO.Subscription.find({
-        where: {
+      const match = {
+        $match: {
           user_id: new ObjectId(userId),
           deleted: false,
         },
-      })
-      ctx.body = {
-        data: data.map(toCamelCase),
-        success: true,
-        message: 'none',
-        code: RESP_CODES.OK,
       }
+      const lookup = {
+        $lookup: {
+          from: 'subscriptionNotificationRecords',
+          let: {
+            s_subscription_id: '$_id',
+          },
+          pipeline: [
+            {
+              $match: {
+                created_at: {
+                  $gte: new Date(
+                    moment().add(-1, 'month').format('YYYY-MM-DD')
+                  ),
+                },
+                $expr: {
+                  $eq: ['$subscription_id', '$$s_subscription_id'],
+                },
+              },
+            },
+            {
+              $sort: {
+                created_at: -1,
+              },
+            },
+          ],
+          as: 'notificationRecords',
+        },
+      }
+      const project = {
+        $project: {
+          numOfNotificationRecords: {
+            $size: '$notificationRecords',
+          },
+          type: 1,
+          coordiantes: 1,
+          city: 1,
+          radius: 1,
+          user_id: 1,
+          conditions: 1,
+          address: 1,
+          payload: 1,
+          created_at: 1,
+          updated_at: 1,
+        },
+      }
+      const data = await Mongo.DAO.Subscription.aggregate([
+        match,
+        lookup,
+        project,
+      ]).toArray()
+      ctx.body = response(RESP_CODES.OK, undefined, data.map(toCamelCase))
     } catch (err) {
       console.warn(err)
       throw err
@@ -67,18 +112,10 @@ class SubscriptionController {
     try {
       sub.validate()
       await sub.save()
-      ctx.body = {
-        success: true,
-        message: 'none',
-        code: RESP_CODES.OK,
-      }
+      ctx.body = response(RESP_CODES.OK)
     } catch (err) {
       if (err instanceof SubscriptionInvalidValue) {
-        ctx.body = {
-          success: false,
-          message: 'Invalid value',
-          code: RESP_CODES.INVALID_INPUTS,
-        }
+        ctx.body = response(RESP_CODES.INVALID_INPUTS)
       } else {
         throw err
       }
@@ -89,11 +126,11 @@ class SubscriptionController {
   @Put('/subscription')
   async updateSubscription(@Body() body: any, @Ctx() ctx: Context) {
     if (!body.id) {
-      ctx.body = {
-        success: false,
-        message: 'Subscription id is mandatory',
-        code: RESP_CODES.VALUE_MISSING,
-      }
+      ctx.body = response(
+        RESP_CODES.VALUE_MISSING,
+        'Subscription id is mandatory'
+      )
+
       return ctx
     }
     const ins = new SubscriptionModel({
@@ -101,11 +138,8 @@ class SubscriptionController {
     })
     try {
       await ins.update()
-      ctx.body = {
-        success: true,
-        message: 'none',
-        code: RESP_CODES.OK,
-      }
+      ctx.body = response(RESP_CODES.OK)
+
       return ctx
     } catch (err) {
       console.warn(err)
@@ -117,14 +151,18 @@ class SubscriptionController {
   async deleteSubscription(@Body() body: any, @Ctx() ctx: Context) {
     const { id } = ctx.query
     const res = await SubscriptionModel.delete(id, ctx.user.userId)
-    ctx.body = res
+    ctx.body = response(RESP_CODES.OK, undefined, res)
     return ctx
   }
 
   @Post('/subscription/notify')
   async onNewApartment(@Body() body: any, @Ctx() ctx: Context) {
     const { apartment_id } = body
-    await SubscriptionModel.notify(apartment_id)
+    const pushed = await SubscriptionModel.notify(apartment_id)
+    ctx.body = response(RESP_CODES.OK, undefined, {
+      notified: pushed.length,
+    })
+    return ctx
   }
 }
 
