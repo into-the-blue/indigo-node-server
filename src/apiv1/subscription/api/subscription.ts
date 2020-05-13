@@ -7,6 +7,7 @@ import {
   Body,
   Ctx,
   Delete,
+  QueryParams,
 } from 'routing-controllers'
 import { Mongo } from '@/db'
 import { SubscriptionModel } from '../model/subscription'
@@ -36,6 +37,72 @@ type IAddSubBody = {
 @Authorized()
 @JsonController()
 class SubscriptionController {
+  @Get('/subscription/notifications')
+  async querySubscriptionNotificationRecords(
+    @QueryParams() query: any,
+    @Ctx() ctx: Context
+  ) {
+    const { id, skip } = query
+    const match = {
+      $match: {
+        subscription_id: new ObjectId(id),
+      },
+    }
+    const lookupApartment = {
+      $lookup: {
+        from: 'apartments',
+        let: {
+          a_id: '$_id',
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$apartment_id', '$$a_id'],
+              },
+            },
+          },
+        ],
+        as: 'apartment',
+      },
+    }
+    const unwind = {
+      $unwind: {
+        path: '$apartment',
+        preserveNullAndEmptyArrays: true,
+      },
+    }
+    const project = {
+      $project: {
+        user_id: 1,
+        subscription_id: 1,
+        apartment_id: 1,
+        apartment: { $ifNull: ['$apartment', null] },
+        location_id: 1,
+        created_at: 1,
+        updated_at: 1,
+        feedback: 1,
+        feedback_detail: 1,
+        distance: 1,
+        viewed: 1,
+      },
+    }
+    const $skip = {
+      $skip: +skip || 0,
+    }
+    const $limit = {
+      $limit: 100,
+    }
+    const notificationRecords = await Mongo.DAO.SubscriptionNotificationRecord.aggregate(
+      [match, lookupApartment, unwind, project, $skip, $limit]
+    ).toArray()
+    return response(
+      RESP_CODES.OK,
+      undefined,
+      notificationRecords.map(toCamelCase)
+    )
+  }
+
   @Get('/subscription')
   async querySubscription(@Body() body: any, @Ctx() ctx: Context) {
     const userId = ctx.user.userId
@@ -97,6 +164,7 @@ class SubscriptionController {
         project,
       ]).toArray()
       ctx.body = response(RESP_CODES.OK, undefined, data.map(toCamelCase))
+      return ctx
     } catch (err) {
       console.warn(err)
       throw err

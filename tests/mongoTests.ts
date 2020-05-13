@@ -7,6 +7,7 @@ require('module-alias/register')
 import { Mongo } from '../src/db'
 import moment from 'moment'
 import { ObjectId } from 'bson'
+import {Jwt,randomHexString} from '../src/utils'
 
 const query1 = async () => {
   const coordinates = [121.448569, 31.222974]

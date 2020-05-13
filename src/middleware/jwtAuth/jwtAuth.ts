@@ -5,7 +5,7 @@ import {} from '@/db'
 
 export function setUpJwtAuth() {
   const options: StrategyOptions = {
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // Authorization: Bearer XXX
     secretOrKey: process.env.JWT_SECRET,
   }
   const jwtStrategy = new Strategy(options, (jwtPayload, done) => {

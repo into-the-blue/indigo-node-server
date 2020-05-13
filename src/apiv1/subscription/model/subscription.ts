@@ -198,6 +198,7 @@ export class SubscriptionModel {
         apartment_id: apartment.id,
         subscription_id: sub.id,
         user_id: sub.userId,
+        distance: sub.distance,
       }
       notifications.push(obj)
       if (

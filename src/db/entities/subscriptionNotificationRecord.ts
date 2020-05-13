@@ -35,6 +35,9 @@ export class SubscriptionNotificationRecordEntity {
   @Column({ type: 'boolean', name: 'email_notify_enable' })
   emailNotifyEnable: boolean
 
+  @Column({ type: 'double' })
+  distance: number
+
   @Column({ type: 'boolean', name: 'sms_notify_enable' })
   smsNotifyEnable: boolean
 

@@ -19,7 +19,7 @@ export const response = <T>(
   return {
     code,
     success: code === RESP_CODES.OK,
-    data,
     message: message || RESPONSE_MESSAGES[code],
+    data,
   }
 }
