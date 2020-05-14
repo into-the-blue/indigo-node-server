@@ -336,6 +336,10 @@ export interface ICustomLocation {
 }
 
 export type TSubscriptionNotificationPriority = 0 | 1 | 2 | 3 | 4;
+
+export interface IClientISubscriptionNotificationRecord extends ISubscriptionNotificationRecord {
+  apartment: Omit<IApartment, 'geoInfo'>;
+}
 export interface ISubscriptionNotificationRecord {
   userId: string;
   subscriptionId: string;
@@ -345,6 +349,7 @@ export interface ISubscriptionNotificationRecord {
   updatedAt: Date;
   feedback: 'good' | 'moderate' | 'bad';
   feedbackDetail: string;
+  distance: number;
   // success: boolean
   viewed: boolean;
 
