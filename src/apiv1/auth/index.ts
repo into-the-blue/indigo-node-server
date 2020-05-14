@@ -161,7 +161,6 @@ export default class UserController {
       return ctx
     }
     const { userId } = Crypto.decrypt(result['token']) as any
-    console.warn(userId)
     return response(RESP_CODES.OK, undefined, { ...Jwt.generateTokens(userId) })
   }
 }

@@ -17,7 +17,7 @@ import { response, RESP_CODES } from '@/utils'
 @JsonController()
 export default class UserController {
   @Get('/users/info')
-  async getAll(@Ctx() ctx: Koa.Context) {
+  async getUserInfo(@Ctx() ctx: Koa.Context) {
     const { userId } = ctx.user
     const user = await Mongo.DAO.User.findOne(userId)
     if (!user) throw new NotFoundError()
