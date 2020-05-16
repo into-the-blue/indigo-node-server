@@ -20,8 +20,9 @@ export class SubscriptionNotificationRecordEntity {
   @ObjectIdColumn({ name: 'subscription_id' })
   subscriptionId: ObjectID
 
-  @ObjectIdColumn({ name: 'location_id' })
-  locationId: ObjectID
+  // canbe station id or custom location id
+  // @ObjectIdColumn({ name: 'location_id' })
+  // locationId: string
 
   @Column({ type: 'string' })
   feedback: string

@@ -13,7 +13,7 @@ import {
   SubscriptionEntity,
   CustomLocationEntity,
   MemberInfoEntity,
-  MemberPurchaseRecordEntity,
+  MemberTransactionRecordEntity,
   SubscriptionNotificationRecordEntity,
 } from './entities'
 // configurations of mongo db
@@ -129,8 +129,8 @@ export class DAO {
     return getMongoRepository(MemberInfoEntity)
   }
 
-  static get MemberPurchaseRecord() {
-    return getMongoRepository(MemberPurchaseRecordEntity)
+  static get MemberTransactionRecord() {
+    return getMongoRepository(MemberTransactionRecordEntity)
   }
 
   static get SubscriptionNotificationRecord() {

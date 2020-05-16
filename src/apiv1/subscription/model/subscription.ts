@@ -193,8 +193,8 @@ export class SubscriptionModel {
         wechat_notify_enable: enables.wechatNotifyEnable,
         email_notify_enable: enables.emailNotifyEnable,
         sms_notify_enable: enables.smsNotifyEnable,
-        location_id:
-          sub.payload['stationId'] || sub.payload['customLocationId'],
+        // location_id:
+        //   sub.payload['stationId'] || sub.payload['customLocationId'],
         apartment_id: apartment.id,
         subscription_id: sub.id,
         user_id: sub.userId,

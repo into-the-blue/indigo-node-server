@@ -2,9 +2,9 @@ import { Entity, ObjectIdColumn, Column, ObjectID } from 'typeorm'
 import { TMemberType, TMemberPurchaseSource } from '@/types'
 
 @Entity({
-  name: 'memberPurchaseRecords',
+  name: 'memberTransactionRecords',
 })
-export class MemberPurchaseRecordEntity {
+export class MemberTransactionRecordEntity {
   @ObjectIdColumn({ name: '_id' })
   id: ObjectID
 
