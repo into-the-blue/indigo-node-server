@@ -46,19 +46,22 @@ class SubscriptionController {
     const match = {
       $match: {
         subscription_id: new ObjectId(id),
+        apartment_id: {
+          $exists: true,
+        },
       },
     }
     const lookupApartment = {
       $lookup: {
         from: 'apartments',
         let: {
-          a_id: '$_id',
+          a_id: '$apartment_id',
         },
         pipeline: [
           {
             $match: {
               $expr: {
-                $eq: ['$apartment_id', '$$a_id'],
+                $eq: ['$_id', '$$a_id'],
               },
             },
           },
@@ -146,6 +149,7 @@ class SubscriptionController {
           numOfNotificationRecords: {
             $size: '$notificationRecords',
           },
+          coordinates: 1,
           type: 1,
           coordiantes: 1,
           city: 1,
