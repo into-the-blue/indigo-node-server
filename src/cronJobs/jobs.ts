@@ -1,7 +1,7 @@
 import Agenda from 'agenda'
 import { Mongo } from '@/db'
 import Moment from 'moment'
-import { from } from 'rxjs'
+import { from, empty } from 'rxjs'
 import { map, mergeMap, switchMap } from 'rxjs/operators'
 import { mean } from 'lodash'
 import { ApartmentEntity } from '@/db/entities'
@@ -94,6 +94,7 @@ const computeSingleApartment = (apartment: ApartmentEntity) =>
   from(findApartmentsNearby(apartment.coordinates, RANGE)).pipe(
     map((apts) => apts.map(toCamelCase)),
     map((apts) => {
+      if (!apts.length) return null
       const res = compute(apts, apartment)
       return {
         ...res,
@@ -101,15 +102,17 @@ const computeSingleApartment = (apartment: ApartmentEntity) =>
       }
     }),
     switchMap((computed) =>
-      Mongo.DAO.Apartment.updateOne(
-        { _id: apartment.id },
-        {
-          $set: {
-            computed,
-            updated_at: new Date(),
-          },
-        }
-      )
+      computed
+        ? Mongo.DAO.Apartment.updateOne(
+            { _id: apartment.id },
+            {
+              $set: {
+                computed,
+                updated_at: new Date(),
+              },
+            }
+          )
+        : empty()
     )
   )
 
@@ -185,12 +188,15 @@ export default (agenda: Agenda) => {
     const { email, phoneNumber } = user
     const message = `您订阅的${address}附近${distance}米发现新房源了,快来查看吧~`
     if (wechat_notify_enable) {
+      console.warn('send wechat')
       // send wechat notificaton
     }
     if (email_notify_enable) {
+      console.warn('send email')
       // send email notification
     }
     if (sms_notify_enable) {
+      console.warn('send sms')
       // send sms notification
     }
 

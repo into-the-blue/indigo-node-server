@@ -26,107 +26,113 @@ import StartCronJob from './cronJobs'
 import Router from 'koa-router'
 import helmet from 'koa-helmet'
 import {} from 'rate-limiter-flexible'
-// import cluster from 'cluster'
 
 const NOT_FOUND_MSG = 'What are you looking for ?'
 const router = new Router<Koa.DefaultState, Koa.Context>()
 const rateLimiter = createRateLimiter()
 const PORT = process.env.PORT || 7000
 
-// cron job
-StartCronJob()
-
-const app = new Koa<Koa.DefaultState, Koa.Context>()
-app.use(helmet())
-app.use(cors())
-app.use(bodyParser())
-// session
-app.keys = [process.env.SESSION_SECRET]
-app.use(session({}, app))
-
-// passport
-setupPassport(app)
-
-// limiter
-app.use(async (ctx, next) => {
-  const requestId = randomString(10)
-  try {
-    console.time(requestId + ctx.url)
-    if (!isDevEnv) await rateLimiter.consume(ctx.ip)
-    await next()
-  } catch (err) {
-    if (err.remainingPoints === 0) {
-      ctx.status = 429
-      ctx.body = 'Too Many Requests'
-      return
-    }
-    console.warn(err.message)
-    throw err
-  } finally {
-    console.timeEnd(requestId + ctx.url)
-  }
-})
-
-//dashboard
-setupDashBoard(app)
-
-// graphql
-app.use(graphqlMiddleware())
-
-// app.use((ctx, next) => {
-//   return passport.authenticate(
-//     'jwt',
-//     { session: false },
-//     async (err, user, info, status) => {
-//       try {
-//         // console.log({
-//         //   err,
-//         //   user,
-//         //   info,
-//         //   status,
-//         // })
-//         await ctx.login(user)
-//         ctx.user = user
-//         await next()
-//       } catch (err) {
-//         console.log('errr', err.message)
-//         ctx.status = 401
-//         ctx.message = 'Unauthorized'
-//         return ctx
-//       }
-//     }
-//   )(ctx, next)
-// })
-
-app.use(router.routes())
-
-// routing controller
-useKoaServer(app, {
-  routePrefix: '/api/v1',
-  controllers: [...ApiV1Controller],
-  authorizationChecker: (action, roles) => {
-    return new Promise((resolve, reject) => {
-      passport.authenticate(
-        'jwt',
-        { session: false },
-        async (err, user, info, status) => {
-          try {
-            if (err || !user) return resolve(false)
-            await action.context.login(user)
-            action.context.user = user
-            resolve(true)
-          } catch (err) {
-            console.warn(err.message)
-            resolve(false)
-          }
-        }
-      )(action.context, action.next as any)
-    })
-  },
-  // currentUserChecker: action => action.context.user,
-})
-
-app.listen(PORT, async () => {
+const run = async () => {
   await Mongo.connect()
-  logger.info(`server is running at http://localhost:${PORT}`)
+
+  // cron job
+  StartCronJob()
+
+  const app = new Koa<Koa.DefaultState, Koa.Context>()
+  app.use(helmet())
+  app.use(cors())
+  app.use(bodyParser())
+  // session
+  app.keys = [process.env.SESSION_SECRET]
+  app.use(session({}, app))
+
+  // passport
+  setupPassport(app)
+
+  // limiter
+  app.use(async (ctx, next) => {
+    const requestId = randomString(10)
+    try {
+      console.time(requestId + ctx.url)
+      if (!isDevEnv) await rateLimiter.consume(ctx.ip)
+      await next()
+    } catch (err) {
+      if (err.remainingPoints === 0) {
+        ctx.status = 429
+        ctx.body = 'Too Many Requests'
+        return
+      }
+      console.warn(err.message)
+      throw err
+    } finally {
+      console.timeEnd(requestId + ctx.url)
+    }
+  })
+
+  //dashboard
+  setupDashBoard(app)
+
+  // graphql
+  app.use(graphqlMiddleware())
+
+  // app.use((ctx, next) => {
+  //   return passport.authenticate(
+  //     'jwt',
+  //     { session: false },
+  //     async (err, user, info, status) => {
+  //       try {
+  //         // console.log({
+  //         //   err,
+  //         //   user,
+  //         //   info,
+  //         //   status,
+  //         // })
+  //         await ctx.login(user)
+  //         ctx.user = user
+  //         await next()
+  //       } catch (err) {
+  //         console.log('errr', err.message)
+  //         ctx.status = 401
+  //         ctx.message = 'Unauthorized'
+  //         return ctx
+  //       }
+  //     }
+  //   )(ctx, next)
+  // })
+
+  app.use(router.routes())
+
+  // routing controller
+  useKoaServer(app, {
+    routePrefix: '/api/v1',
+    controllers: [...ApiV1Controller],
+    authorizationChecker: (action, roles) => {
+      return new Promise((resolve, reject) => {
+        passport.authenticate(
+          'jwt',
+          { session: false },
+          async (err, user, info, status) => {
+            try {
+              if (err || !user) return resolve(false)
+              await action.context.login(user)
+              action.context.user = user
+              resolve(true)
+            } catch (err) {
+              console.warn(err.message)
+              resolve(false)
+            }
+          }
+        )(action.context, action.next as any)
+      })
+    },
+    // currentUserChecker: action => action.context.user,
+  })
+
+  app.listen(PORT, async () => {
+    logger.info(`server is running at http://localhost:${PORT}`)
+  })
+}
+
+run().catch((err) => {
+  logger.error('failed to start server ' + err.message)
 })

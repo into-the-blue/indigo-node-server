@@ -6,7 +6,7 @@ import {
   IMetroStation,
 } from '@/types'
 import { SubscriptionInvalidValue } from '../utils/errors'
-import { toSnakeCase, toCamelCase } from '@/utils'
+import { toSnakeCase, toCamelCase, logger } from '@/utils'
 import {
   findSubscriptionsInRange,
   handleConditions,
@@ -176,10 +176,12 @@ export class SubscriptionModel {
   static notify = async (apartmentId: string) => {
     const apartment = await Mongo.DAO.Apartment.findOne(apartmentId)
     const subsInRange = await findSubscriptionsInRange(apartment.coordinates)
+    logger.info('[subs in range]', subsInRange.length)
     // filter out subscriptions not matched
     const matched = subsInRange.filter((sub) =>
       handleConditions(sub.conditions, apartment)
     )
+    logger.info('[matched]', matched.length)
     // check if users reached notification quota
     let notifications = []
     let notificationEnabled = []
@@ -196,8 +198,8 @@ export class SubscriptionModel {
         // location_id:
         //   sub.payload['stationId'] || sub.payload['customLocationId'],
         apartment_id: apartment.id,
-        subscription_id: sub.id,
-        user_id: sub.userId,
+        subscription_id: new ObjectId(sub.id),
+        user_id: new ObjectId(sub.userId),
         distance: sub.distance,
       }
       notifications.push(obj)
@@ -216,10 +218,12 @@ export class SubscriptionModel {
         })
       }
     })
-    await DAO.SubscriptionNotificationRecord.insertMany(notifications)
-
+    if (notifications.length)
+      await DAO.SubscriptionNotificationRecord.insertMany(notifications)
+    logger.info('[insert nitofications]', notifications.length)
     // add into agendas
     // order notifications by member level
+    agenda.now(CRON_JOBS.computeApartments, { apartment })
     const prms = notificationEnabled.map((item) => {
       if (item.priority === 0) {
         return agenda.now(CRON_JOBS.sendSubscriptionNotification, item)
@@ -230,8 +234,9 @@ export class SubscriptionModel {
         item
       )
     })
+    logger.info('[tasks]', prms.length)
     await Promise.all(prms)
-
+    logger.info('[notifid]', notificationEnabled.length)
     return notificationEnabled
   }
 }

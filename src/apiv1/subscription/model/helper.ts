@@ -88,6 +88,7 @@ export const findSubscriptionsInRange = async (
       radius: 1,
       user_id: 1,
       conditions: 1,
+      distance: 1,
       address: 1,
       payload: 1,
       created_at: 1,
@@ -237,6 +238,9 @@ export const mapMemberTypeToPriority = (
   type: TMemberType
 ): TSubscriptionNotificationPriority => {
   switch (type) {
+    case 'admin': {
+      return 0
+    }
     case 'friend': {
       return 0
     }

@@ -8,13 +8,14 @@ import {
   Ctx,
   Delete,
   QueryParams,
+  InternalServerError,
 } from 'routing-controllers'
 import { Mongo } from '@/db'
 import { SubscriptionModel } from '../model/subscription'
 import { Context } from 'koa'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { TSubCondition, IMetroStation } from '@/types'
-import { toCamelCase, RESP_CODES, response } from '@/utils'
+import { toCamelCase, RESP_CODES, response, logger } from '@/utils'
 import { ObjectId } from 'bson'
 import moment from 'moment'
 
@@ -230,11 +231,21 @@ class SubscriptionController {
   @Post('/subscription/notify')
   async onNewApartment(@Body() body: any, @Ctx() ctx: Context) {
     const { apartment_id } = body
-    const pushed = await SubscriptionModel.notify(apartment_id)
-    ctx.body = response(RESP_CODES.OK, undefined, {
-      notified: pushed.length,
-    })
-    return ctx
+    if (!apartment_id) {
+      ctx.body = response(RESP_CODES.INVALID_INPUTS)
+      ctx.status = 400
+      return ctx
+    }
+    try {
+      const pushed = await SubscriptionModel.notify(apartment_id)
+      ctx.body = response(RESP_CODES.OK, undefined, {
+        notified: pushed.length,
+      })
+      return ctx
+    } catch (err) {
+      logger.error(err)
+      throw new InternalServerError(err.message)
+    }
   }
 }
 
