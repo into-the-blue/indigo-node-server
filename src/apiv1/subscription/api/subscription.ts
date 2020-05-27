@@ -106,16 +106,19 @@ class SubscriptionController {
       notificationRecords.map(toCamelCase)
     )
   }
-
   @Get('/subscription')
-  async querySubscription(@Body() body: any, @Ctx() ctx: Context) {
+  async querySubscription(@QueryParams() query: any, @Ctx() ctx: Context) {
     const userId = ctx.user.userId
+    const { coordinates } = query
     try {
       const match = {
         $match: {
           user_id: new ObjectId(userId),
           deleted: false,
         },
+      }
+      if (coordinates) {
+        match.$match['coordinates'] = coordinates
       }
       const lookup = {
         $lookup: {
@@ -152,7 +155,6 @@ class SubscriptionController {
           },
           coordinates: 1,
           type: 1,
-          coordiantes: 1,
           city: 1,
           radius: 1,
           user_id: 1,
@@ -168,11 +170,10 @@ class SubscriptionController {
         lookup,
         project,
       ]).toArray()
-      ctx.body = response(RESP_CODES.OK, undefined, data.map(toCamelCase))
-      return ctx
+      return response(RESP_CODES.OK, undefined, data.map(toCamelCase), ctx)
     } catch (err) {
       console.warn(err)
-      throw err
+      throw new InternalServerError(err.messa)
     }
   }
 

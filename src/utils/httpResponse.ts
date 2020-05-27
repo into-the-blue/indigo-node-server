@@ -1,3 +1,5 @@
+import { Context } from 'koa'
+
 export enum RESP_CODES {
   OK = 1,
   VALUE_MISSING = 101,
@@ -11,15 +13,32 @@ const RESPONSE_MESSAGES = {
   [RESP_CODES.ACCESS_TOKEN_EXPIRED]: 'access token expired',
 }
 
-export const response = <T>(
+export function response<T>(
   code: RESP_CODES,
   message?: string | null,
   data?: T
-) => {
-  return {
+): { code: RESP_CODES; success: boolean; message: string; data: T }
+export function response<T>(
+  code: RESP_CODES,
+  message?: string | null,
+  data?: T,
+  ctx?: Context
+): Context
+export function response<T>(
+  code: RESP_CODES,
+  message?: string | null,
+  data?: T,
+  ctx?: Context
+) {
+  const res = {
     code,
     success: code === RESP_CODES.OK,
     message: message || RESPONSE_MESSAGES[code],
     data,
   }
+  if (ctx) {
+    ctx.body = res
+    return ctx
+  }
+  return res
 }
