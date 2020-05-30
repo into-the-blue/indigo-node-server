@@ -44,133 +44,23 @@ class SubscriptionController {
     @Ctx() ctx: Context
   ) {
     const { id, skip } = query
-    const match = {
-      $match: {
-        subscription_id: new ObjectId(id),
-        apartment_id: {
-          $exists: true,
-        },
-      },
-    }
-    const lookupApartment = {
-      $lookup: {
-        from: 'apartments',
-        let: {
-          a_id: '$apartment_id',
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ['$_id', '$$a_id'],
-              },
-            },
-          },
-        ],
-        as: 'apartment',
-      },
-    }
-    const unwind = {
-      $unwind: {
-        path: '$apartment',
-        preserveNullAndEmptyArrays: true,
-      },
-    }
-    const project = {
-      $project: {
-        user_id: 1,
-        subscription_id: 1,
-        apartment_id: 1,
-        apartment: { $ifNull: ['$apartment', null] },
-        location_id: 1,
-        created_at: 1,
-        updated_at: 1,
-        feedback: 1,
-        feedback_detail: 1,
-        distance: 1,
-        viewed: 1,
-      },
-    }
-    const $skip = {
-      $skip: +skip || 0,
-    }
-    const $limit = {
-      $limit: 100,
-    }
-    const notificationRecords = await Mongo.DAO.SubscriptionNotificationRecord.aggregate(
-      [match, lookupApartment, unwind, project, $skip, $limit]
-    ).toArray()
-    return response(
-      RESP_CODES.OK,
-      undefined,
-      notificationRecords.map(toCamelCase)
+
+    const records = await SubscriptionModel.findSubscriptionNotificationRecords(
+      id,
+      skip
     )
+    return response(RESP_CODES.OK, undefined, records)
   }
   @Get('/subscription')
   async querySubscription(@QueryParams() query: any, @Ctx() ctx: Context) {
     const userId = ctx.user.userId
     const { coordinates } = query
     try {
-      const match = {
-        $match: {
-          user_id: new ObjectId(userId),
-          deleted: false,
-        },
-      }
-      if (coordinates) {
-        match.$match['coordinates'] = coordinates
-      }
-      const lookup = {
-        $lookup: {
-          from: 'subscriptionNotificationRecords',
-          let: {
-            s_subscription_id: '$_id',
-          },
-          pipeline: [
-            {
-              $match: {
-                created_at: {
-                  $gte: new Date(
-                    moment().add(-1, 'month').format('YYYY-MM-DD')
-                  ),
-                },
-                $expr: {
-                  $eq: ['$subscription_id', '$$s_subscription_id'],
-                },
-              },
-            },
-            {
-              $sort: {
-                created_at: -1,
-              },
-            },
-          ],
-          as: 'notificationRecords',
-        },
-      }
-      const project = {
-        $project: {
-          numOfNotificationRecords: {
-            $size: '$notificationRecords',
-          },
-          coordinates: 1,
-          type: 1,
-          city: 1,
-          radius: 1,
-          user_id: 1,
-          conditions: 1,
-          address: 1,
-          payload: 1,
-          created_at: 1,
-          updated_at: 1,
-        },
-      }
-      const data = await Mongo.DAO.Subscription.aggregate([
-        match,
-        lookup,
-        project,
-      ]).toArray()
-      return response(RESP_CODES.OK, undefined, data.map(toCamelCase), ctx)
+      const data = await SubscriptionModel.findSubscriptions(
+        userId,
+        coordinates ? { coordinates } : undefined
+      )
+      return response(RESP_CODES.OK, undefined, data, ctx)
     } catch (err) {
       console.warn(err)
       throw new InternalServerError(err.messa)

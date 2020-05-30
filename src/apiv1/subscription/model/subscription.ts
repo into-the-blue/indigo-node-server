@@ -4,6 +4,7 @@ import {
   TSubCondition,
   TSubscriptionPayload,
   IMetroStation,
+  IApartment,
 } from '@/types'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { toSnakeCase, toCamelCase, logger } from '@/utils'
@@ -16,6 +17,12 @@ import {
 import { ObjectId } from 'bson'
 import { DAO } from '@/db/mongo'
 import { agenda, CRON_JOBS } from '@/cronJobs'
+import moment from 'moment'
+import {
+  SubscriptionEntity,
+  SubscriptionNotificationRecordEntity,
+} from '@/db/entities'
+
 type TInitialProps =
   | {
       id?: string
@@ -238,5 +245,130 @@ export class SubscriptionModel {
     await Promise.all(prms)
     logger.info('[notifid]', notificationEnabled.length)
     return notificationEnabled
+  }
+
+  static findSubscriptions = async (
+    userId: string,
+    conditions?: Pick<IApartment, 'coordinates'>
+  ): Promise<SubscriptionEntity[]> => {
+    const match = {
+      $match: {
+        user_id: new ObjectId(userId),
+        deleted: false,
+        ...conditions,
+      },
+    }
+    const lookup = {
+      $lookup: {
+        from: 'subscriptionNotificationRecords',
+        let: {
+          s_subscription_id: '$_id',
+        },
+        pipeline: [
+          {
+            $match: {
+              created_at: {
+                $gte: new Date(moment().add(-1, 'month').format('YYYY-MM-DD')),
+              },
+              $expr: {
+                $eq: ['$subscription_id', '$$s_subscription_id'],
+              },
+            },
+          },
+          {
+            $sort: {
+              created_at: -1,
+            },
+          },
+        ],
+        as: 'notificationRecords',
+      },
+    }
+    const project = {
+      $project: {
+        numOfNotificationRecords: {
+          $size: '$notificationRecords',
+        },
+        coordinates: 1,
+        type: 1,
+        city: 1,
+        radius: 1,
+        user_id: 1,
+        conditions: 1,
+        address: 1,
+        payload: 1,
+        created_at: 1,
+        updated_at: 1,
+      },
+    }
+    const data = await Mongo.DAO.Subscription.aggregate([
+      match,
+      lookup,
+      project,
+    ]).toArray()
+    return data.map(toCamelCase)
+  }
+
+  static findSubscriptionNotificationRecords = async (
+    subscriptionId: string,
+    skip?: number
+  ): Promise<SubscriptionNotificationRecordEntity[]> => {
+    const match = {
+      $match: {
+        subscription_id: new ObjectId(subscriptionId),
+        apartment_id: {
+          $exists: true,
+        },
+      },
+    }
+    const lookupApartment = {
+      $lookup: {
+        from: 'apartments',
+        let: {
+          a_id: '$apartment_id',
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$_id', '$$a_id'],
+              },
+            },
+          },
+        ],
+        as: 'apartment',
+      },
+    }
+    const unwind = {
+      $unwind: {
+        path: '$apartment',
+        preserveNullAndEmptyArrays: true,
+      },
+    }
+    const project = {
+      $project: {
+        user_id: 1,
+        subscription_id: 1,
+        apartment_id: 1,
+        apartment: { $ifNull: ['$apartment', null] },
+        location_id: 1,
+        created_at: 1,
+        updated_at: 1,
+        feedback: 1,
+        feedback_detail: 1,
+        distance: 1,
+        viewed: 1,
+      },
+    }
+    const $skip = {
+      $skip: +skip || 0,
+    }
+    const $limit = {
+      $limit: 100,
+    }
+    const notificationRecords = await Mongo.DAO.SubscriptionNotificationRecord.aggregate(
+      [match, lookupApartment, unwind, project, $skip, $limit]
+    ).toArray()
+    return notificationRecords.map(toCamelCase)
   }
 }

@@ -1,7 +1,7 @@
 import { Mongo } from '@/db'
 import { logger, toCamelCase } from '@/utils'
 import {} from 'mongodb'
-import { decodeAddressAmap } from '@/services/geographic'
+import { GeographicClient } from '@/services/geographic'
 import { UserInputError } from 'apollo-server-koa'
 
 const _queryApartmeentsNearbyCoordinates = async (
@@ -10,7 +10,10 @@ const _queryApartmeentsNearbyCoordinates = async (
   limit: number
 ) => {
   if (
-    !(coordinates.length === 2 && coordinates.every(o => typeof o === 'number'))
+    !(
+      coordinates.length === 2 &&
+      coordinates.every((o) => typeof o === 'number')
+    )
   ) {
     throw new UserInputError('Invalid coordinates')
   }
@@ -155,10 +158,10 @@ export const queryApartmentsNearbyStation = async (parent, args, ctx) => {
 
 export const queryApartmentsNearbyAddress = async (parent, args, ctx) => {
   const { address, city, limit, radius } = args
-  const geoInfo = await decodeAddressAmap(address, city)
+  const geoInfo = await GeographicClient.decodeAddressAmap(address, city)
   // console.warn(geoInfo)
   if (!+geoInfo.count) throw new UserInputError('Cannot decode this address')
-  const coordinates = geoInfo.geocodes[0].location.split(',').map(l => +l)
+  const coordinates = geoInfo.geocodes[0].location.split(',').map((l) => +l)
   return {
     coordinates,
     apartments: await _queryApartmeentsNearbyCoordinates(

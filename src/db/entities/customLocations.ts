@@ -17,7 +17,7 @@ export class CustomLocationEntity {
   @Column({ type: 'array' })
   alias: string[]
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', default: 0 })
   popularity: number
 
   @Column({ name: 'geo_info' })

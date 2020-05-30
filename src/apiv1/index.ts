@@ -11,5 +11,11 @@
 import UserController from './user'
 import AuthController from './auth'
 import { SubscriptionController } from './subscription/api'
+import { LocationController } from './location/api'
 
-export default [UserController, AuthController, SubscriptionController]
+export default [
+  UserController,
+  AuthController,
+  SubscriptionController,
+  LocationController,
+]

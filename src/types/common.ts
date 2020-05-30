@@ -190,7 +190,7 @@ export interface IApartment {
 
   subwayAccessibility: Facility
 
-  coordinates: number[]
+  coordinates: [number, number]
 
   coordtype: 'gcj02' | 'amap-gcj02'
 
@@ -350,6 +350,7 @@ export type TSubscriptionNotificationPriority = 0 | 1 | 2 | 3 | 4
 export interface ISubscriptionNotificationRecordClient
   extends ISubscriptionNotificationRecord {
   apartment: Omit<IApartment, 'geoInfo'>
+  id: string
 }
 export interface ISubscriptionNotificationRecord {
   userId: string
@@ -398,4 +399,15 @@ export type THttpResponse<T = undefined> = {
   success: boolean
   message: string
   data?: T
+}
+
+export interface IPOI {
+  name: string
+  type: string
+  typeCode: string
+  address: string
+  location: string
+  coordinates: [number, number]
+  city: string
+  district: string
 }
