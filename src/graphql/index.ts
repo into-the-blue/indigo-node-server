@@ -149,6 +149,7 @@ export const typeDefs = gql`
     queryApartmentsWithoutLabel(limit: Int!): [Apartment]
     queryApartmentsWithLabel(limit: Int!): [Apartment]
     queryApartmentsNearby(id: ID!, radius: Int!, limit: Int!): [Apartment]
+    queryApartmentsNearbyCoordinates(coordinates: [Float]!, radius: Int!, limit: Int!): [Apartment]
 
     queryApartmentsNearbyAddress(
       address: String!

@@ -51,6 +51,11 @@ export const queryApartmentsNearby = async (parent, args, ctx) => {
   return _queryApartmeentsNearbyCoordinates(coordinates, radius, limit)
 }
 
+export const queryApartmentsNearbyCoordinates = async (parent, args, ctx) => {
+  const { coordinates, radius = 500, limit = 50 } = args
+  return _queryApartmeentsNearbyCoordinates(coordinates, radius, limit)
+}
+
 export const queryApartments = async (parent, args, ctx) => {
   logger.info(parent, args, ctx)
   const data = await Mongo.DAO.Apartment.find({
