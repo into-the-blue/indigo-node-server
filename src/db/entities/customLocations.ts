@@ -1,4 +1,5 @@
 import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm'
+import { TCustomLocationType } from '@/types'
 
 @Entity({ name: 'customLocations' })
 export class CustomLocationEntity {
@@ -6,7 +7,16 @@ export class CustomLocationEntity {
   id: ObjectID
 
   @Column({ type: 'string' })
+  type: TCustomLocationType
+
+  @Column({ type: 'string' })
   address: string
+
+  @Column({ type: 'string' })
+  name: string
+
+  @Column({ type: 'string' })
+  district: string
 
   @Column({ type: 'string' })
   city: string

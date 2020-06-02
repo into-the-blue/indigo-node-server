@@ -334,9 +334,17 @@ export interface IMemberPurchaseRecord {
   source: TMemberPurchaseSource
 }
 
+export interface ICustomLocationClient extends ICustomLocation {
+  id: string
+}
+
+export type TCustomLocationType = 'poi' | 'pin'
 export interface ICustomLocation {
   address: string
+  type: TCustomLocationType
   city: string
+  name: string
+  district: string
   coordinates: [number, number]
   createdAt: string
   updatedAt: string

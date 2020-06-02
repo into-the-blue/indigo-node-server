@@ -10,13 +10,13 @@ export class CustomLocationModel {
     })
   }
 
-  static insertCustomLocation = async (
+  static insertCustomLocationPOI = async (
     payload: Pick<
       CustomLocationEntity,
-      'address' | 'city' | 'coordinates' | 'geoInfo'
+      'address' | 'city' | 'coordinates' | 'geoInfo' | 'name' | 'district'
     >
   ) => {
-    const { address, city, coordinates, geoInfo } = payload
+    const { address, city, coordinates, geoInfo, district, name } = payload
     const existing = await CustomLocationModel.findCustomLocation(coordinates)
     if (existing) return existing.id
     const res = await Mongo.DAO.CustomLocation.insertOne({
@@ -27,6 +27,9 @@ export class CustomLocationModel {
       alias: [address],
       created_at: new Date(),
       updated_at: new Date(),
+      name,
+      district,
+      type: 'poi',
     })
     return res.insertedId
   }

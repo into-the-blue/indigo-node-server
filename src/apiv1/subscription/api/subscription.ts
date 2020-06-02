@@ -54,7 +54,8 @@ class SubscriptionController {
   @Get('/subscription')
   async querySubscription(@QueryParams() query: any, @Ctx() ctx: Context) {
     const userId = ctx.user.userId
-    const { coordinates } = query
+    const { lng, lat } = query
+    const coordinates: [number, number] = lng && lat ? [+lng, +lat] : undefined
     try {
       const data = await SubscriptionModel.findSubscriptions(
         userId,
