@@ -5,6 +5,7 @@ import {
   TSubscriptionPayload,
   IMetroStation,
   IApartment,
+  ICustomLocation,
 } from '@/types'
 import { SubscriptionInvalidValue } from '../utils/errors'
 import { toSnakeCase, toCamelCase, logger } from '@/utils'
@@ -42,7 +43,10 @@ type TInitialProps =
       city: string
       radius: number
       address: string
-      payload?: any
+      payload?: Pick<
+        ICustomLocation,
+        'city' | 'address' | 'name' | 'district'
+      > & { id: string }
       userId: string
       conditions: TSubCondition[]
     }
@@ -137,6 +141,7 @@ export class SubscriptionModel {
       user_id: new ObjectId(this.instance.userId),
       created_at: new Date(),
       updated_at: new Date(),
+      deleted: false,
     })
   }
 
@@ -258,6 +263,7 @@ export class SubscriptionModel {
         ...conditions,
       },
     }
+    console.warn
     const lookup = {
       $lookup: {
         from: 'subscriptionNotificationRecords',

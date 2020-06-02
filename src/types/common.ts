@@ -272,10 +272,9 @@ export type TSubCondition =
 
 export type TSubscriptionPayload =
   | Pick<IMetroStation, 'stationId' | 'stationName'>
-  | {
-      address: string
-      customLocationId: string
-    }
+  | (Pick<ICustomLocation, 'address' | 'name' | 'district' | 'city'> & {
+      id: string
+    })
 
 export interface ISubscription {
   id?: string
