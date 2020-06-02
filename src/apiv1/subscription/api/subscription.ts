@@ -56,7 +56,6 @@ class SubscriptionController {
     const userId = ctx.user.userId
     const { lng, lat } = query
     const coordinates: [number, number] = lng && lat ? [+lng, +lat] : undefined
-    console.warn(coordinates, lng, lat)
     try {
       const data = await SubscriptionModel.findSubscriptions(
         userId,
@@ -64,7 +63,7 @@ class SubscriptionController {
       )
       return response(RESP_CODES.OK, undefined, data)
     } catch (err) {
-      console.warn(err)
+      logger.error(err)
       throw new InternalServerError(err.messa)
     }
   }
