@@ -65,3 +65,13 @@ export const isDevEnv = () => {
 export const isTestEnv = () => {
   return process.env.NODE_ENV === 'test'
 }
+
+export const Omit = <T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
+  const toReturn: any = {}
+  Object.keys((key) => {
+    if (keys.includes(key)) return
+    const value = obj[key]
+    toReturn[key] = value
+  })
+  return toReturn
+}

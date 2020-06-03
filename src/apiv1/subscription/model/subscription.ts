@@ -8,7 +8,7 @@ import {
   ICustomLocation,
 } from '@/types'
 import { SubscriptionInvalidValue } from '../utils/errors'
-import { toSnakeCase, toCamelCase, logger } from '@/utils'
+import { toSnakeCase, toCamelCase, logger, Omit } from '@/utils'
 import {
   findSubscriptionsInRange,
   handleConditions,
@@ -134,15 +134,39 @@ export class SubscriptionModel {
     return pass
   }
 
-  save = () => {
-    return Mongo.DAO.Subscription.insertOne({
-      ...toSnakeCase(this.instance),
-      payload: this.instance.payload,
-      user_id: new ObjectId(this.instance.userId),
-      created_at: new Date(),
-      updated_at: new Date(),
-      deleted: false,
+  save = async () => {
+    const snakeCased = toSnakeCase(Omit(this.instance, ['userId']))
+    const existing = await Mongo.DAO.Subscription.findOne({
+      where: {
+        coordinates: this.instance.coordinates,
+        deleted: false,
+        user_id: new ObjectId(this.instance.userId),
+      },
     })
+    if (existing) {
+      await Mongo.DAO.Subscription.updateOne(
+        {
+          _id: existing.id,
+        },
+        {
+          $set: {
+            ...snakeCased,
+            updated_at: new Date(),
+          },
+        }
+      )
+      return existing.id
+    }
+    return (
+      await Mongo.DAO.Subscription.insertOne({
+        ...snakeCased,
+        payload: this.instance.payload,
+        user_id: new ObjectId(this.instance.userId),
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted: false,
+      })
+    ).insertedId
   }
 
   update = () => {
