@@ -75,3 +75,19 @@ export const Omit = <T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
   })
   return toReturn
 }
+export const isNull = (value: any) =>
+  value === null || typeof value === 'undefined'
+
+export const pick = <T, K extends keyof T>(
+  obj: T,
+  keys: K[],
+  ignoreNull: boolean = true
+): Pick<T, K> => {
+  const toReturn: any = {}
+  keys.forEach((key) => {
+    const value = obj[key]
+    if (isNull(value) && !ignoreNull) return
+    toReturn[key] = value
+  })
+  return toReturn
+}
