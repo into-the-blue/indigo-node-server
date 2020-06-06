@@ -13,6 +13,7 @@ import AuthController from './auth';
 import { SubscriptionController } from './subscription/api';
 import { LocationController } from './location/api';
 import { MembershipController } from './member/api';
+import { UniversalController } from './universal/api';
 
 export default [
   UserController,
@@ -20,4 +21,5 @@ export default [
   SubscriptionController,
   LocationController,
   MembershipController,
+  UniversalController,
 ];
