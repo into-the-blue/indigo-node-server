@@ -28,7 +28,7 @@ export class MembershipModel {
     });
     return {
       enable: records.length < MAXIMUM_REDEEM_TIMES_PER_MONTH,
-      redeemedTimes: records.length,
+      remainingRedeemTimes: MAXIMUM_REDEEM_TIMES_PER_MONTH - records.length,
     };
   };
 
