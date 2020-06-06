@@ -8,14 +8,16 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
-import UserController from './user'
-import AuthController from './auth'
-import { SubscriptionController } from './subscription/api'
-import { LocationController } from './location/api'
+import UserController from './user';
+import AuthController from './auth';
+import { SubscriptionController } from './subscription/api';
+import { LocationController } from './location/api';
+import { MembershipController } from './member/api';
 
 export default [
   UserController,
   AuthController,
   SubscriptionController,
   LocationController,
-]
+  MembershipController,
+];

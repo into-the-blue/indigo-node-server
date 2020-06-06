@@ -7,7 +7,6 @@ import {
   Ctx,
   Authorized,
   UseBefore,
-  Middleware,
   NotFoundError,
 } from 'routing-controllers'
 import Koa from 'koa'

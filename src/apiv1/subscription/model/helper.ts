@@ -1,25 +1,25 @@
-import { Mongo } from '@/db'
+import { Mongo } from '@/db';
 import {
   TSubCondition,
   TMemberType,
   TSubscriptionNotificationPriority,
-} from '@/types'
+} from '@/types';
 import {
   SubscriptionEntity,
   ApartmentEntity,
   MemberInfoEntity,
   SubscriptionNotificationRecordEntity,
-} from '@/db/entities'
-import { toCamelCase } from '@/utils'
-import moment from 'moment'
+} from '@/db/entities';
+import { toCamelCase } from '@/utils';
+import moment from 'moment';
 
 export const findSubscriptionsInRange = async (
   coordinates: [number, number]
 ): Promise<
   (SubscriptionEntity & {
-    memberInfo: MemberInfoEntity
-    notificationRecords: SubscriptionNotificationRecordEntity[]
-    distance: number
+    memberInfo: MemberInfoEntity;
+    notificationRecords: SubscriptionNotificationRecordEntity[];
+    distance: number;
   })[]
 > => {
   const geoNear = {
@@ -34,7 +34,7 @@ export const findSubscriptionsInRange = async (
         deleted: false,
       },
     },
-  }
+  };
   const redact = {
     $redact: {
       $cond: {
@@ -45,7 +45,7 @@ export const findSubscriptionsInRange = async (
         else: '$$PRUNE',
       },
     },
-  }
+  };
   const lookupMemberInfo = {
     $lookup: {
       from: 'memberInfos',
@@ -53,7 +53,7 @@ export const findSubscriptionsInRange = async (
       foreignField: 'user_id',
       as: 'memberInfo',
     },
-  }
+  };
   // find records in this month
   const lookupNotificationRecords = {
     $lookup: {
@@ -73,13 +73,13 @@ export const findSubscriptionsInRange = async (
       ],
       as: 'notificationRecords',
     },
-  }
+  };
   const unwindMemberInfo = {
     $unwind: {
       path: '$memberInfo',
       preserveNullAndEmptyArrays: true,
     },
-  }
+  };
   const project = {
     $project: {
       type: 1,
@@ -96,7 +96,7 @@ export const findSubscriptionsInRange = async (
       notificationRecords: 1,
       memberInfo: { $ifNull: ['$memberInfo', {}] },
     },
-  }
+  };
   const data = await Mongo.DAO.Subscription.aggregate([
     geoNear,
     redact,
@@ -104,9 +104,9 @@ export const findSubscriptionsInRange = async (
     unwindMemberInfo,
     lookupNotificationRecords,
     project,
-  ]).toArray()
-  return data.map(toCamelCase)
-}
+  ]).toArray();
+  return data.map(toCamelCase);
+};
 
 // bed [0, 1]
 // carport ['暂无数据', '免费使用', '租用车位']
@@ -132,53 +132,53 @@ const mapApartmentValueToBoolean = (value: any) => {
     null,
     undefined,
     false,
-  ]
-  return !FALSE_VALUES.includes(value)
-}
+  ];
+  return !FALSE_VALUES.includes(value);
+};
 
-const SPECIFIC_KEYS = ['isApartment']
+const SPECIFIC_KEYS = ['isApartment'];
 
 const _specificKeyHandler = {
   isApartment: (apartment: ApartmentEntity, condition: TSubCondition) => {
-    return apartment.tags.includes('公寓')
+    return apartment.tags.includes('公寓');
   },
-}
+};
 
 const _handleCondition = (apartment: ApartmentEntity) => (
   condition: TSubCondition
 ) => {
-  const handler = _specificKeyHandler[condition.key]
-  if (handler) return handler(apartment, condition)
+  const handler = _specificKeyHandler[condition.key];
+  if (handler) return handler(apartment, condition);
 
   if (condition.type === 'range') {
-    const value = apartment[condition.key] as number
-    const con = [...condition.condition]
+    const value = apartment[condition.key] as number;
+    const con = [...condition.condition];
     if (con[1] === -1) {
-      con[1] = 99999999
+      con[1] = 99999999;
     }
-    return value >= con[0] && value <= con[1]
+    return value >= con[0] && value <= con[1];
   }
   if (condition.type === 'boolean') {
     return (
       mapApartmentValueToBoolean(apartment[condition.key]) ===
       condition.condition
-    )
+    );
   }
 
   if (condition.type === 'text') {
-    return apartment[condition.key] === condition.condition
+    return apartment[condition.key] === condition.condition;
   }
-}
+};
 
 export const handleConditions = (
   conditions: TSubCondition[],
   apartment: ApartmentEntity
-) => conditions.every(_handleCondition(apartment))
+) => conditions.every(_handleCondition(apartment));
 
 const _notificationEnable = (quota: number, used: number, enable: boolean) => {
-  if (!enable) return false
-  return quota === -1 || quota > used
-}
+  if (!enable) return false;
+  return quota === -1 || quota > used;
+};
 export const handleMemberSetting = (
   setting: MemberInfoEntity,
   notificationRecords: SubscriptionNotificationRecordEntity[]
@@ -187,34 +187,19 @@ export const handleMemberSetting = (
     smsEnable,
     emailEnable,
     wechatEnable,
-    notificationQuota,
     smsNotifyQuota,
     emailNotifyQuota,
     wechatNotifyQuota,
-  } = setting
-  let wechatNotificationCount = 0
-  let smsNotifyCount = 0
-  let emailNotifyCount = 0
+  } = setting;
+  let wechatNotificationCount = 0;
+  let smsNotifyCount = 0;
+  let emailNotifyCount = 0;
 
-  if (notificationQuota === -1) {
-    return {
-      wechatNotifyEnable: true,
-      emailNotifyEnable: true,
-      smsNotifyEnable: true,
-    }
-  }
-  if (notificationRecords.length >= notificationQuota) {
-    return {
-      wechatNotifyEnable: false,
-      emailNotifyEnable: false,
-      smsNotifyEnable: false,
-    }
-  }
   notificationRecords.forEach((record) => {
-    if (record.wechatNotifyEnable) wechatNotificationCount += 1
-    if (record.emailNotifyEnable) emailNotifyCount += 1
-    if (record.smsNotifyEnable) smsNotifyCount += 1
-  })
+    if (record.wechatNotifyEnable) wechatNotificationCount += 1;
+    if (record.emailNotifyEnable) emailNotifyCount += 1;
+    if (record.smsNotifyEnable) smsNotifyCount += 1;
+  });
   return {
     wechatNotifyEnable: _notificationEnable(
       wechatNotifyQuota,
@@ -231,34 +216,34 @@ export const handleMemberSetting = (
       smsNotifyCount,
       smsEnable
     ),
-  }
-}
+  };
+};
 
 export const mapMemberTypeToPriority = (
   type: TMemberType
 ): TSubscriptionNotificationPriority => {
   switch (type) {
     case 'admin': {
-      return 0
+      return 0;
     }
     case 'friend': {
-      return 0
+      return 0;
     }
     case 'sponsor':
     case 'lifelongMember': {
-      return 1
+      return 1;
     }
     case '30': {
-      return 2
+      return 2;
     }
     case '14': {
-      return 3
+      return 3;
     }
     case '5': {
-      return 4
+      return 4;
     }
     default: {
-      return 4
+      return 4;
     }
   }
-}
+};

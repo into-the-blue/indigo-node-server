@@ -125,7 +125,7 @@ export class DAO {
     return getMongoRepository(CustomLocationEntity)
   }
 
-  static get MemberSetting() {
+  static get MemberInfo() {
     return getMongoRepository(MemberInfoEntity)
   }
 

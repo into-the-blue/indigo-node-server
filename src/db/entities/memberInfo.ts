@@ -28,9 +28,9 @@ export class MemberInfoEntity {
 
   @Column({ name: 'subscription_quota', type: 'int', default: 0 })
   subscriptionQuota: number
-
-  @Column({ name: 'notification_quota', type: 'int', default: 0 })
-  notificationQuota: number
+  // doesn't make sense?
+  // @Column({ name: 'notification_quota', type: 'int', default: 0 })
+  // notificationQuota: number
 
   @Column({ name: 'sms_notify_quota', type: 'int', default: 0 })
   smsNotifyQuota: number
