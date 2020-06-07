@@ -66,6 +66,7 @@ export class MembershipModel {
     userId: string,
     type: TMemberType,
     source: TMemberPurchaseSource,
+    originPrice: number = 0,
     price: number = 0,
     discount: number = 1
   ): Promise<MemberInfoEntity> => {
@@ -93,6 +94,7 @@ export class MembershipModel {
       discount,
       type,
       source,
+      origin_price: originPrice,
       created_at: new Date(),
       updated_at: new Date(),
     });
