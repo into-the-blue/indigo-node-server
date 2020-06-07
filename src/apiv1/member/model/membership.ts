@@ -15,6 +15,14 @@ import {
 } from '../utils/errors';
 
 export class MembershipModel {
+  static getMemberInfo = (userId: string) => {
+    return Mongo.DAO.MemberInfo.findOne({
+      where: {
+        user_id: new ObjectId(userId),
+      },
+    });
+  };
+
   static canRedeemFreeMemberShip = async (userId: string) => {
     const records = await Mongo.DAO.MemberTransactionRecord.find({
       where: {
@@ -22,10 +30,11 @@ export class MembershipModel {
         type: '5',
         source: 'monthly_activity',
         created_at: {
-          $gte: new Date(moment().set('day', 1).format('YYYY-MM-DD')),
+          $gte: new Date(moment().set('date', 1).format('YYYY-MM-DD')),
         },
       },
     });
+    console.warn(records);
     return {
       enable: records.length < MAXIMUM_REDEEM_TIMES_PER_MONTH,
       remainingRedeemTimes: MAXIMUM_REDEEM_TIMES_PER_MONTH - records.length,

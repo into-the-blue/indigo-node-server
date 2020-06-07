@@ -63,7 +63,7 @@ export const findSubscriptionsInRange = async (
         {
           $match: {
             created_at: {
-              $gte: new Date(moment().set('day', 1).format('YYYY-MM-DD')),
+              $gte: new Date(moment().set('date', 1).format('YYYY-MM-DD')),
             },
             $expr: {
               $eq: ['$subscription_id', '$$s_subscription_id'],

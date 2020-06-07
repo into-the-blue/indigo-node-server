@@ -1,16 +1,16 @@
-import Path from 'path'
-import 'reflect-metadata'
+import Path from 'path';
+import 'reflect-metadata';
 require('dotenv').config({
   path: Path.join(__dirname, '..', '.env'),
-})
-require('module-alias/register')
-import { Mongo } from '../src/db'
-import moment from 'moment'
-import { ObjectId } from 'bson'
-import {Jwt,randomHexString} from '../src/utils'
+});
+require('module-alias/register');
+import { Mongo } from '../src/db';
+import moment from 'moment';
+import { ObjectId } from 'bson';
+import { Jwt, randomHexString } from '../src/utils';
 
 const query1 = async () => {
-  const coordinates = [121.448569, 31.222974]
+  const coordinates = [121.448569, 31.222974];
 
   const geoNear = {
     $geoNear: {
@@ -24,7 +24,7 @@ const query1 = async () => {
         deleted: false,
       },
     },
-  }
+  };
   const redact = {
     $redact: {
       $cond: {
@@ -35,7 +35,7 @@ const query1 = async () => {
         else: '$$PRUNE',
       },
     },
-  }
+  };
   const lookupMemberInfo = {
     $lookup: {
       from: 'memberInfos',
@@ -43,7 +43,7 @@ const query1 = async () => {
       foreignField: 'user_id',
       as: 'memberInfo',
     },
-  }
+  };
   const lookupNotificationRecords = {
     $lookup: {
       from: 'subscriptionNotificationRecords',
@@ -52,7 +52,7 @@ const query1 = async () => {
         {
           $match: {
             created_at: {
-              $gte: new Date(moment().set('day', 1).format('YYYY-MM-DD')),
+              $gte: new Date(moment().set('date', 1).format('YYYY-MM-DD')),
             },
             $expr: {
               $eq: ['$subscription_id', '$$s_subscription_id'],
@@ -62,13 +62,13 @@ const query1 = async () => {
       ],
       as: 'notificationRecords',
     },
-  }
+  };
   const unwindMemberInfo = {
     $unwind: {
       path: '$memberInfo',
       preserveNullAndEmptyArrays: true,
     },
-  }
+  };
   const project = {
     $project: {
       type: 1,
@@ -84,7 +84,7 @@ const query1 = async () => {
       notificationRecords: 1,
       memberInfo: { $ifNull: ['$memberInfo', {}] },
     },
-  }
+  };
   const data = await Mongo.DAO.Subscription.aggregate([
     geoNear,
     redact,
@@ -92,10 +92,10 @@ const query1 = async () => {
     unwindMemberInfo,
     lookupNotificationRecords,
     project,
-  ]).toArray()
+  ]).toArray();
 
-  console.warn(data)
-}
+  console.warn(data);
+};
 
 const query2 = async () => {
   const match = {
@@ -103,7 +103,7 @@ const query2 = async () => {
       user_id: new ObjectId('5e64c11a7a189568b8525d27'),
       deleted: false,
     },
-  }
+  };
   const lookup = {
     $lookup: {
       from: 'subscriptionNotificationRecords',
@@ -129,7 +129,7 @@ const query2 = async () => {
       ],
       as: 'notificationRecords',
     },
-  }
+  };
   const project = {
     $project: {
       numOfNotificationRecords: {
@@ -146,19 +146,35 @@ const query2 = async () => {
       created_at: 1,
       updated_at: 1,
     },
-  }
+  };
   const data = await Mongo.DAO.Subscription.aggregate([
     match,
     lookup,
     project,
-  ]).toArray()
-  console.warn(data)
-}
+  ]).toArray();
+  console.warn(data);
+};
+
+const queryMembershipRecords = async () => {
+  const records = await Mongo.DAO.MemberTransactionRecord.aggregate([
+    {
+      $match: {
+        user_id: new ObjectId('5e64c11a7a189568b8525d27'),
+        type: '5',
+        source: 'monthly_activity',
+        created_at: {
+          $gte: new Date(moment().set('date', 1).format('YYYY-MM-DD')),
+        },
+      },
+    },
+  ]).toArray();
+  console.warn(records, records.length);
+};
 const main = async () => {
   await Mongo.connect().catch((err) => {
-    console.warn('connection err', err)
-  })
-  await query2()
-}
+    console.warn('connection err', err);
+  });
+  queryMembershipRecords();
+};
 
-main()
+main();

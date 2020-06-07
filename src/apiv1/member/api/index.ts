@@ -13,7 +13,7 @@ import {
   AVAILABLE_MEMBER_SOURCE,
   AVAILABLE_MEMBER_TYPES,
 } from '../utils/constants';
-import { response, RESP_CODES } from '@/utils';
+import { response, RESP_CODES, toCamelCase } from '@/utils';
 import { MembershipModel } from '../model/membership';
 import {
   ExistingABetterMembership,
@@ -24,6 +24,13 @@ import { TMemberType } from '@/types';
 @Authorized()
 @JsonController()
 export class MembershipController {
+  @Get('/member')
+  async getMemberInfo(@Ctx() ctx: Context) {
+    const { userId } = ctx.user;
+    const info = await MembershipModel.getMemberInfo(userId);
+    return response(RESP_CODES.OK, undefined, toCamelCase(info));
+  }
+
   @Post('/member/new')
   async newMember(@Ctx() ctx: Context, @Body() body: any) {
     try {
@@ -64,6 +71,7 @@ export class MembershipController {
   async getFreeMembershipInfo(@Ctx() ctx: Context) {
     const { userId } = ctx.user;
     const data = await MembershipModel.canRedeemFreeMemberShip(userId);
+    console.warn(data)
     return response(RESP_CODES.OK, undefined, data);
   }
 }

@@ -35,7 +35,7 @@ export const MEMBER_QUOTA: {
     subscriptionQuota: 5,
     wechatEnable: true,
     wechatNotifyQuota: 20,
-    period: 10,
+    period: 5,
   },
   14: {
     emailEnable: true,
