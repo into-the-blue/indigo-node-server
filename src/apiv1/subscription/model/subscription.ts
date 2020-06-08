@@ -1,4 +1,4 @@
-import { Mongo } from '@/db'
+import { Mongo } from '@/db';
 import {
   ISubscription,
   TSubCondition,
@@ -6,72 +6,71 @@ import {
   IMetroStation,
   IApartment,
   ICustomLocation,
-} from '@/types'
-import { SubscriptionInvalidValue } from '../utils/errors'
-import { toSnakeCase, toCamelCase, logger, Omit } from '@/utils'
+} from '@/types';
+import { SubscriptionInvalidValue } from '../utils/errors';
+import { toSnakeCase, toCamelCase, logger, Omit } from '@/utils';
 import {
   findSubscriptionsInRange,
   handleConditions,
   handleMemberSetting,
   mapMemberTypeToPriority,
-} from './helper'
-import { ObjectId } from 'bson'
-import { DAO } from '@/db/mongo'
-import { agenda, CRON_JOBS } from '@/cronJobs'
-import moment from 'moment'
+} from './helper';
+import { ObjectId } from 'bson';
+import { agenda, CRON_JOBS } from '@/cronJobs';
+import moment from 'moment';
 import {
   SubscriptionEntity,
   SubscriptionNotificationRecordEntity,
-} from '@/db/entities'
+} from '@/db/entities';
 
 type TInitialProps =
   | {
-      id?: string
-      coordinates: [number, number]
-      type: 'metroStation'
-      city: string
-      radius: number
-      address: string
-      payload: IMetroStation
-      userId: string
-      conditions: TSubCondition[]
+      id?: string;
+      coordinates: [number, number];
+      type: 'metroStation';
+      city: string;
+      radius: number;
+      address: string;
+      payload: IMetroStation;
+      userId: string;
+      conditions: TSubCondition[];
     }
   | {
-      id?: string
-      coordinates: [number, number]
-      type: 'customLocation'
-      city: string
-      radius: number
-      address: string
+      id?: string;
+      coordinates: [number, number];
+      type: 'customLocation';
+      city: string;
+      radius: number;
+      address: string;
       payload?: Pick<
         ICustomLocation,
         'city' | 'address' | 'name' | 'district'
-      > & { id: string }
-      userId: string
-      conditions: TSubCondition[]
-    }
+      > & { id: string };
+      userId: string;
+      conditions: TSubCondition[];
+    };
 
 const validator = {
   type: (type: string) => {
-    return ['metroStation', 'customLocation'].includes(type)
+    return ['metroStation', 'customLocation'].includes(type);
   },
   city: (city: string) => {
-    return typeof city === 'string'
+    return typeof city === 'string';
   },
   radius: (radius: number) => {
-    return !isNaN(+radius) && radius >= 0
+    return !isNaN(+radius) && radius >= 0;
   },
   userId: (userId: string) => typeof userId === 'string',
   conditions: (conditions: TSubCondition[]) => {
     return conditions.every((con) => {
       if (con.type === 'range') {
-        return con.condition.every((o) => !isNaN(+o))
+        return con.condition.every((o) => !isNaN(+o));
       }
       if (con.type === 'boolean') {
-        return typeof con.condition === 'boolean'
+        return typeof con.condition === 'boolean';
       }
-      return false
-    })
+      return false;
+    });
   },
   coordinates: (coordinates: [number, number]) =>
     coordinates.length === 2 && coordinates.every((o) => !isNaN(o)),
@@ -81,19 +80,19 @@ const validator = {
     instance: Omit<ISubscription, 'id' | 'createdAt' | 'updatedAt'>
   ) => {
     if (instance.type === 'metroStation')
-      return typeof payload['stationId'] === 'string'
-    if (instance.type === 'customLocation') return true
-    return false
+      return typeof payload['stationId'] === 'string';
+    if (instance.type === 'customLocation') return true;
+    return false;
   },
-}
+};
 
 export class SubscriptionModel {
   instance: Omit<
     ISubscription,
     'id' | 'createdAt' | 'updatedAt' | 'deleted'
   > & {
-    address: string
-  }
+    address: string;
+  };
 
   constructor(props: TInitialProps) {
     const {
@@ -107,7 +106,7 @@ export class SubscriptionModel {
       payload,
       address,
       ...restProps
-    } = props
+    } = props;
     this.instance = {
       type,
       coordinates,
@@ -120,29 +119,29 @@ export class SubscriptionModel {
         ...restProps,
         ...payload,
       },
-    }
+    };
     if (id) {
-      Object.assign(this.instance, { id })
+      Object.assign(this.instance, { id });
     }
   }
 
   validate = () => {
     const pass = Object.keys(this.instance).every((key) =>
       validator[key](this.instance[key], this.instance)
-    )
-    if (!pass) throw new SubscriptionInvalidValue()
-    return pass
-  }
+    );
+    if (!pass) throw new SubscriptionInvalidValue();
+    return pass;
+  };
 
   save = async () => {
-    const snakeCased = toSnakeCase(Omit(this.instance, ['userId']))
+    const snakeCased = toSnakeCase(Omit(this.instance, ['userId']));
     const existing = await Mongo.DAO.Subscription.findOne({
       where: {
         coordinates: this.instance.coordinates,
         deleted: false,
         user_id: new ObjectId(this.instance.userId),
       },
-    })
+    });
     if (existing) {
       await Mongo.DAO.Subscription.updateOne(
         {
@@ -154,8 +153,8 @@ export class SubscriptionModel {
             updated_at: new Date(),
           },
         }
-      )
-      return existing.id
+      );
+      return existing.id;
     }
     return (
       await Mongo.DAO.Subscription.insertOne({
@@ -166,17 +165,17 @@ export class SubscriptionModel {
         updated_at: new Date(),
         deleted: false,
       })
-    ).insertedId
-  }
+    ).insertedId;
+  };
 
   update = () => {
-    const toUpdate: any = {}
+    const toUpdate: any = {};
     Object.keys(this.instance).forEach((key) => {
-      if (key === 'id') return
+      if (key === 'id') return;
       if (this.instance[key]) {
-        toUpdate[toCamelCase(key)] = this.instance[key]
+        toUpdate[toCamelCase(key)] = this.instance[key];
       }
-    })
+    });
     return Mongo.DAO.Subscription.updateOne(
       {
         _id: new ObjectId(this.instance['id']),
@@ -187,8 +186,8 @@ export class SubscriptionModel {
           updated_at: new Date(),
         },
       }
-    )
-  }
+    );
+  };
 
   static delete = async (id: string, user_id: string) => {
     const res = await Mongo.DAO.Subscription.updateOne(
@@ -201,31 +200,31 @@ export class SubscriptionModel {
           deleted: true,
         },
       }
-    )
+    );
 
     return {
       success: res.result.ok === 1,
       deletedCount: res.upsertedCount,
-    }
-  }
+    };
+  };
 
   static notify = async (apartmentId: string) => {
-    const apartment = await Mongo.DAO.Apartment.findOne(apartmentId)
-    const subsInRange = await findSubscriptionsInRange(apartment.coordinates)
-    logger.info('[subs in range]', subsInRange.length)
+    const apartment = await Mongo.DAO.Apartment.findOne(apartmentId);
+    const subsInRange = await findSubscriptionsInRange(apartment.coordinates);
+    logger.info('[subs in range]', subsInRange.length);
     // filter out subscriptions not matched
     const matched = subsInRange.filter((sub) =>
       handleConditions(sub.conditions, apartment)
-    )
-    logger.info('[matched]', matched.length)
+    );
+    logger.info('[matched]', matched.length);
     // check if users reached notification quota
-    let notifications = []
-    let notificationEnabled = []
+    let notifications = [];
+    let notificationEnabled = [];
     matched.forEach((sub) => {
       const enables = handleMemberSetting(
         sub.memberInfo,
         sub.notificationRecords
-      )
+      );
       const obj = {
         priority: mapMemberTypeToPriority(sub.memberInfo.type),
         wechat_notify_enable: enables.wechatNotifyEnable,
@@ -237,8 +236,8 @@ export class SubscriptionModel {
         subscription_id: new ObjectId(sub.id),
         user_id: new ObjectId(sub.userId),
         distance: sub.distance,
-      }
-      notifications.push(obj)
+      };
+      notifications.push(obj);
       if (
         obj.wechat_notify_enable ||
         obj.email_notify_enable ||
@@ -251,31 +250,47 @@ export class SubscriptionModel {
           area: apartment.area,
           house_type: apartment.houseType,
           distance: sub.distance.toFixed(0),
-        })
+        });
       }
-    })
+    });
     if (notifications.length)
-      await DAO.SubscriptionNotificationRecord.insertMany(notifications)
-    logger.info('[insert nitofications]', notifications.length)
+      await Mongo.DAO.SubscriptionNotificationRecord.insertMany(notifications);
+    logger.info('[insert nitofications]', notifications.length);
     // add into agendas
     // order notifications by member level
-    agenda.now(CRON_JOBS.computeApartments, { apartment })
+    agenda.now(CRON_JOBS.computeApartments, { apartment });
     const prms = notificationEnabled.map((item) => {
       if (item.priority === 0) {
-        return agenda.now(CRON_JOBS.sendSubscriptionNotification, item)
+        return agenda.now(CRON_JOBS.sendSubscriptionNotification, item);
       }
       return agenda.schedule(
         `in ${item.priority * 10} minutes`,
         CRON_JOBS.sendSubscriptionNotification,
         item
-      )
-    })
-    logger.info('[tasks]', prms.length)
-    await Promise.all(prms)
-    logger.info('[notifid]', notificationEnabled.length)
-    return notificationEnabled
-  }
+      );
+    });
+    logger.info('[tasks]', prms.length);
+    await Promise.all(prms);
+    logger.info('[notifid]', notificationEnabled.length);
+    await Mongo.DAO.Apartment.updateOne(
+      {
+        _id: new ObjectId(apartmentId),
+      },
+      {
+        $set: {
+          notified: notificationEnabled.length,
+        },
+      }
+    );
+    return notificationEnabled;
+  };
 
+  /**
+   *
+   *
+   * @static
+   * @memberof SubscriptionModel
+   */
   static findSubscriptions = async (
     userId: string,
     conditions?: Pick<IApartment, 'coordinates'>
@@ -286,8 +301,7 @@ export class SubscriptionModel {
         deleted: false,
         ...conditions,
       },
-    }
-    console.warn
+    };
     const lookup = {
       $lookup: {
         from: 'subscriptionNotificationRecords',
@@ -313,7 +327,7 @@ export class SubscriptionModel {
         ],
         as: 'notificationRecords',
       },
-    }
+    };
     const project = {
       $project: {
         numOfNotificationRecords: {
@@ -330,14 +344,14 @@ export class SubscriptionModel {
         created_at: 1,
         updated_at: 1,
       },
-    }
+    };
     const data = await Mongo.DAO.Subscription.aggregate([
       match,
       lookup,
       project,
-    ]).toArray()
-    return data.map(toCamelCase)
-  }
+    ]).toArray();
+    return data.map(toCamelCase);
+  };
 
   static findSubscriptionNotificationRecords = async (
     subscriptionId: string,
@@ -350,7 +364,7 @@ export class SubscriptionModel {
           $exists: true,
         },
       },
-    }
+    };
     const lookupApartment = {
       $lookup: {
         from: 'apartments',
@@ -368,13 +382,13 @@ export class SubscriptionModel {
         ],
         as: 'apartment',
       },
-    }
+    };
     const unwind = {
       $unwind: {
         path: '$apartment',
         preserveNullAndEmptyArrays: true,
       },
-    }
+    };
     const project = {
       $project: {
         user_id: 1,
@@ -389,16 +403,16 @@ export class SubscriptionModel {
         distance: 1,
         viewed: 1,
       },
-    }
+    };
     const $skip = {
       $skip: +skip || 0,
-    }
+    };
     const $limit = {
       $limit: 100,
-    }
+    };
     const notificationRecords = await Mongo.DAO.SubscriptionNotificationRecord.aggregate(
       [match, lookupApartment, unwind, project, $skip, $limit]
-    ).toArray()
-    return notificationRecords.map(toCamelCase)
-  }
+    ).toArray();
+    return notificationRecords.map(toCamelCase);
+  };
 }

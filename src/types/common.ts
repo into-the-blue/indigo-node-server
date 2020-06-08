@@ -213,6 +213,9 @@ export interface IApartment {
   distance: number;
 
   computed?: TApartmentComputed;
+
+  // number of notified subscriptions
+  notified?: number;
 }
 
 export interface IMetroLine {
