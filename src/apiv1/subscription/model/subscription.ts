@@ -236,6 +236,9 @@ export class SubscriptionModel {
         subscription_id: new ObjectId(sub.id),
         user_id: new ObjectId(sub.userId),
         distance: sub.distance,
+        created_at: new Date(),
+        expired_at: new Date(),
+        viewed: false,
       };
       notifications.push(obj);
       if (
