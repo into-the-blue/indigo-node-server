@@ -22,6 +22,8 @@ import {
   SubscriptionEntity,
   SubscriptionNotificationRecordEntity,
 } from '@/db/entities';
+import { from } from 'rxjs';
+import { map, bufferCount, concatMap, mergeMap } from 'rxjs/operators';
 
 type TInitialProps =
   | {
@@ -236,9 +238,6 @@ export class SubscriptionModel {
         subscription_id: new ObjectId(sub.id),
         user_id: new ObjectId(sub.userId),
         distance: sub.distance,
-        created_at: new Date(),
-        expired_at: new Date(),
-        viewed: false,
       };
       notifications.push(obj);
       if (
@@ -256,24 +255,46 @@ export class SubscriptionModel {
         });
       }
     });
-    if (notifications.length)
-      await Mongo.DAO.SubscriptionNotificationRecord.insertMany(notifications);
+    if (notifications.length) {
+      await from(notifications)
+        .pipe(
+          map((r) => ({
+            ...r,
+            created_at: new Date(),
+            expired_at: new Date(),
+            viewed: false,
+          })),
+          bufferCount(100),
+          concatMap((notis) =>
+            Mongo.DAO.SubscriptionNotificationRecord.insertMany(notis)
+          )
+        )
+        .toPromise();
+    }
     logger.info('[insert nitofications]', notifications.length);
     // add into agendas
     // order notifications by member level
-    agenda.now(CRON_JOBS.computeApartments, { apartment });
-    const prms = notificationEnabled.map((item) => {
-      if (item.priority === 0) {
-        return agenda.now(CRON_JOBS.sendSubscriptionNotification, item);
-      }
-      return agenda.schedule(
-        `in ${item.priority * 10} minutes`,
-        CRON_JOBS.sendSubscriptionNotification,
-        item
-      );
-    });
-    logger.info('[tasks]', prms.length);
-    await Promise.all(prms);
+    await agenda.now(CRON_JOBS.computeApartments, { apartment });
+    await from(notificationEnabled)
+      .pipe(
+        bufferCount(100),
+        concatMap((data) =>
+          from(data).pipe(
+            mergeMap((item) => {
+              if (item.priority === 0) {
+                return agenda.now(CRON_JOBS.sendSubscriptionNotification, item);
+              }
+              return agenda.schedule(
+                `in ${item.priority * 10} minutes`,
+                CRON_JOBS.sendSubscriptionNotification,
+                item
+              );
+            })
+          )
+        )
+      )
+      .toPromise();
+    logger.info('[tasks]', notificationEnabled.length);
     logger.info('[notifid]', notificationEnabled.length);
     await Mongo.DAO.Apartment.updateOne(
       {

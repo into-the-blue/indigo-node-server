@@ -174,7 +174,6 @@ const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
-  queryMembershipRecords();
 };
 
 main();
