@@ -295,7 +295,6 @@ export class SubscriptionModel {
       )
       .toPromise();
     logger.info('[tasks]', notificationEnabled.length);
-    logger.info('[notifid]', notificationEnabled.length);
     await Mongo.DAO.Apartment.updateOne(
       {
         _id: new ObjectId(apartmentId),
