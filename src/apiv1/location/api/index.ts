@@ -40,7 +40,7 @@ export class LocationController {
     return response(RESP_CODES.OK, undefined, res);
   }
 
-  @Get('/location/available_citys')
+  @Get('/location/available_cities')
   availableCitys() {
     const BEI_JING = {
       name: '北京市',

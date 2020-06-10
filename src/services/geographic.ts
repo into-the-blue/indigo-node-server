@@ -1,6 +1,7 @@
 // import {} from '@/utils'
 import Axios from 'axios';
 import { IGeoInfoAMap, IPOI, IDecodedCoordinates } from '@/types';
+import { get } from 'lodash';
 const AMAP_API_URL = 'https://restapi.amap.com/v3/geocode/geo?parameters';
 const AMAP_AK = process.env.AMAP_ACCESS_KEY;
 
@@ -80,9 +81,8 @@ export class GeographicClient {
         },
       }
     );
-    if (!data.success) return null;
-    if (typeof data.data.regeocode.city !== 'string') return null;
-    return data.data;
+    if (typeof get(data, 'regeocode.addressComponent.city') !== 'string') return null;
+    return data;
   };
 }
 
