@@ -1,6 +1,6 @@
 // import {} from '@/utils'
 import Axios from 'axios';
-import { IGeoInfoAMap, IPOI } from '@/types';
+import { IGeoInfoAMap, IPOI, IDecodedCoordinates } from '@/types';
 const AMAP_API_URL = 'https://restapi.amap.com/v3/geocode/geo?parameters';
 const AMAP_AK = process.env.AMAP_ACCESS_KEY;
 
@@ -68,7 +68,9 @@ export class GeographicClient {
     return mapPoiData(data);
   };
 
-  static decodeCoordinates = async (coordinates: [number, number]) => {
+  static decodeCoordinates = async (
+    coordinates: [number, number]
+  ): Promise<null | IDecodedCoordinates> => {
     const { data } = await Axios.get(
       'https://restapi.amap.com/v3/geocode/regeo',
       {
@@ -78,7 +80,9 @@ export class GeographicClient {
         },
       }
     );
-    return data;
+    if (!data.success) return null;
+    if (typeof data.data.regeocode.city !== 'string') return null;
+    return data.data;
   };
 }
 

@@ -425,3 +425,28 @@ export interface IPOI {
   city: string;
   district: string;
 }
+
+export interface IBanner {
+  imgUrl: string;
+  width: number;
+  height: number;
+  type: 'free_membership';
+}
+
+export interface IDecodedCoordinates {
+  info: string;
+  infocode: string;
+  regeocode: {
+    addressComponent: {
+      city: string;
+      province: string;
+      adcode: string;
+      citycode: string;
+      district: string;
+      towncode: string;
+      township: string;
+    };
+    formatted_address: string;
+  };
+  status: 1;
+}
