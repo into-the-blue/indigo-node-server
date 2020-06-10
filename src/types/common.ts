@@ -450,3 +450,9 @@ export interface IDecodedCoordinates {
   };
   status: 1;
 }
+
+export interface IAvailableCity {
+  name: string;
+  value: string;
+  defaultCoordinates: [number, number];
+}
