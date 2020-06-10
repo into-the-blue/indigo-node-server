@@ -9,6 +9,7 @@ import {
   Delete,
   QueryParams,
   InternalServerError,
+  QueryParam,
 } from 'routing-controllers';
 import { Mongo } from '@/db';
 import { SubscriptionModel } from '../model/subscription';
@@ -52,14 +53,18 @@ class SubscriptionController {
     return response(RESP_CODES.OK, undefined, records);
   }
   @Get('/subscription')
-  async querySubscription(@QueryParams() query: any, @Ctx() ctx: Context) {
+  async querySubscription(
+    @QueryParam('coordinates') coordinates: [number, number],
+    @Ctx() ctx: Context
+  ) {
     const userId = ctx.user.userId;
-    const { lng, lat } = query;
-    const coordinates: [number, number] = lng && lat ? [+lng, +lat] : undefined;
+    const _coordinates: [number, number] = coordinates
+      ? (coordinates.map((_) => +_) as any)
+      : undefined;
     try {
       const data = await SubscriptionModel.findSubscriptions(
         userId,
-        coordinates ? { coordinates } : undefined
+        _coordinates ? { coordinates: _coordinates } : undefined
       );
       return response(RESP_CODES.OK, undefined, data);
     } catch (err) {

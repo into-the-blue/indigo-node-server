@@ -42,6 +42,7 @@ const run = async () => {
   app.use(helmet())
   app.use(cors())
   app.use(bodyParser())
+  require('koa-qs')(app)
   // session
   app.keys = [process.env.SESSION_SECRET]
   app.use(session({}, app))

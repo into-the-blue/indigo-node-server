@@ -1,8 +1,8 @@
 // import {} from '@/utils'
-import Axios from 'axios'
-import { IGeoInfoAMap, IPOI } from '@/types'
-const AMAP_API_URL = 'https://restapi.amap.com/v3/geocode/geo?parameters'
-const AMAP_AK = process.env.AMAP_ACCESS_KEY
+import Axios from 'axios';
+import { IGeoInfoAMap, IPOI } from '@/types';
+const AMAP_API_URL = 'https://restapi.amap.com/v3/geocode/geo?parameters';
+const AMAP_AK = process.env.AMAP_ACCESS_KEY;
 
 export class GeographicClient {
   /**
@@ -42,9 +42,9 @@ export class GeographicClient {
         city: city,
         output: 'json',
       },
-    })
-    return data
-  }
+    });
+    return data;
+  };
 
   /**
    *
@@ -53,7 +53,10 @@ export class GeographicClient {
    * @memberof GeographicClient
    * https://lbs.amap.com/api/webservice/guide/api/search
    */
-  static searchPOI = async (keywords: string, city?: string): Promise<IPOI[]> => {
+  static searchPOI = async (
+    keywords: string,
+    city?: string
+  ): Promise<IPOI[]> => {
     const { data } = await Axios.get('https://restapi.amap.com/v3/place/text', {
       params: {
         key: AMAP_AK,
@@ -61,9 +64,22 @@ export class GeographicClient {
         city,
         citylimit: true,
       },
-    })
-    return mapPoiData(data)
-  }
+    });
+    return mapPoiData(data);
+  };
+
+  static decodeCoordinates = async (coordinates: [number, number]) => {
+    const { data } = await Axios.get(
+      'https://restapi.amap.com/v3/geocode/regeo',
+      {
+        params: {
+          key: AMAP_AK,
+          location: coordinates.join(','),
+        },
+      }
+    );
+    return data;
+  };
 }
 
 const mapPoiData = (data: any): IPOI[] => {
@@ -76,5 +92,5 @@ const mapPoiData = (data: any): IPOI[] => {
     coordinates: item.location.split(',').map((o) => +o),
     city: item.cityname,
     district: item.adname,
-  }))
-}
+  }));
+};
