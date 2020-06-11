@@ -19,6 +19,7 @@ import { TSubCondition, IMetroStation } from '@/types';
 import { toCamelCase, RESP_CODES, response, logger } from '@/utils';
 import { ObjectId } from 'bson';
 import moment from 'moment';
+import { IsArray } from 'class-validator';
 
 type IAddSubBody = {
   coordinates: [number, number];
@@ -36,9 +37,41 @@ type IAddSubBody = {
       type: 'metroStation';
     }
 );
+
 @Authorized()
 @JsonController()
 class SubscriptionController {
+  @Post('/subscription/view_notification')
+  async setNotifViewed(@Body() body: any, @Ctx() ctx: Context) {
+    const { ids } = body;
+    await Mongo.DAO.SubscriptionNotificationRecord.updateMany(
+      {
+        _id: {
+          $in: ids.map((id) => new ObjectId(id)),
+        },
+      },
+      {
+        $set: {
+          viewed: true,
+        },
+      }
+    );
+    return response(RESP_CODES.OK);
+  }
+
+  @Post('/subscription/view_apartment')
+  async setAptViewed(@Body() body: any, @Ctx() ctx: Context) {
+    const { apartment_id } = body;
+    const { userId } = ctx.user;
+    await Mongo.DAO.ApartmentViewHistory.insertOne({
+      apartment_id: new ObjectId(apartment_id),
+      user_id: new ObjectId(userId),
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+    return response(RESP_CODES.OK);
+  }
+
   @Get('/subscription/notifications')
   async querySubscriptionNotificationRecords(
     @QueryParams() query: any,

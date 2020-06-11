@@ -3,8 +3,8 @@ import {
   getConnectionManager,
   Connection,
   getMongoRepository,
-} from 'typeorm'
-import path from 'path'
+} from 'typeorm';
+import path from 'path';
 import {
   ApartmentEntity,
   LineEntity,
@@ -15,7 +15,8 @@ import {
   MemberInfoEntity,
   MemberTransactionRecordEntity,
   SubscriptionNotificationRecordEntity,
-} from './entities'
+  ApartmentViewHistoryEntity,
+} from './entities';
 // configurations of mongo db
 const getBaseMongoConfig = (): ConnectionOptions => ({
   type: 'mongodb',
@@ -27,7 +28,7 @@ const getBaseMongoConfig = (): ConnectionOptions => ({
   authSource: 'admin',
   useNewUrlParser: true,
   useUnifiedTopology: true,
-})
+});
 
 export const getMongoOptions = (
   logging: boolean = true,
@@ -36,17 +37,22 @@ export const getMongoOptions = (
   const options: ConnectionOptions = {
     ...getBaseMongoConfig(),
     entities: [
-      path.join(
-        __dirname,
-        'entities',
-        `*.${['test', 'dev'].includes(process.env.NODE_ENV) ? 'ts' : 'js'}`
-      ),
+      ApartmentEntity,
+      LineEntity,
+      StationEntity,
+      UserEntity,
+      SubscriptionEntity,
+      CustomLocationEntity,
+      MemberInfoEntity,
+      MemberTransactionRecordEntity,
+      SubscriptionNotificationRecordEntity,
+      ApartmentViewHistoryEntity,
     ],
     synchronize,
     logging,
-  }
-  return options
-}
+  };
+  return options;
+};
 
 const ensureIndexes = async () => {
   const apartmentIndexes = [
@@ -57,7 +63,7 @@ const ensureIndexes = async () => {
     { price_per_square_meter: -1 },
     { area: 1 },
     { created_at: -1 },
-  ]
+  ];
   const subscriptionIndexes = [
     {
       coordinates: '2dsphere',
@@ -68,72 +74,76 @@ const ensureIndexes = async () => {
     {
       radius: -1,
     },
-  ]
+  ];
   await Promise.all(
     apartmentIndexes.map((idx) => DAO.Apartment.createCollectionIndex(idx))
-  )
+  );
   await Promise.all(
     subscriptionIndexes.map((idx) =>
       DAO.Subscription.createCollectionIndex(idx)
     )
-  )
+  );
   await DAO.Station.createCollectionIndex({
     coordinates: '2dsphere',
-  })
+  });
 
   await DAO.CustomLocation.createCollectionIndex({
     coordinates: '2dsphere',
-  })
-}
+  });
+};
 
 export const connect = async () => {
-  const options = getMongoOptions()
-  const manager = getConnectionManager()
-  let connection: Connection
+  const options = getMongoOptions();
+  const manager = getConnectionManager();
+  let connection: Connection;
   if (!manager.has('default')) {
-    connection = manager.create(options)
+    connection = manager.create(options);
   } else {
-    connection = manager.get()
+    connection = manager.get();
   }
   if (!connection.isConnected) {
-    await connection.connect()
-    await ensureIndexes()
+    await connection.connect();
+    await ensureIndexes();
   }
-  return connection
-}
+  return connection;
+};
 
 export class DAO {
   static get Apartment() {
-    return getMongoRepository(ApartmentEntity)
+    return getMongoRepository(ApartmentEntity);
   }
   static get Line() {
-    return getMongoRepository(LineEntity)
+    return getMongoRepository(LineEntity);
   }
   static get Station() {
-    return getMongoRepository(StationEntity)
+    return getMongoRepository(StationEntity);
   }
 
   static get User() {
-    return getMongoRepository(UserEntity)
+    return getMongoRepository(UserEntity);
   }
 
   static get Subscription() {
-    return getMongoRepository(SubscriptionEntity)
+    return getMongoRepository(SubscriptionEntity);
   }
 
   static get CustomLocation() {
-    return getMongoRepository(CustomLocationEntity)
+    return getMongoRepository(CustomLocationEntity);
   }
 
   static get MemberInfo() {
-    return getMongoRepository(MemberInfoEntity)
+    return getMongoRepository(MemberInfoEntity);
   }
 
   static get MemberTransactionRecord() {
-    return getMongoRepository(MemberTransactionRecordEntity)
+    return getMongoRepository(MemberTransactionRecordEntity);
   }
 
   static get SubscriptionNotificationRecord() {
-    return getMongoRepository(SubscriptionNotificationRecordEntity)
+    return getMongoRepository(SubscriptionNotificationRecordEntity);
+  }
+
+  static get ApartmentViewHistory() {
+    return getMongoRepository(ApartmentViewHistoryEntity);
   }
 }

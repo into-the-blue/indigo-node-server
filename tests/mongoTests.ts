@@ -204,7 +204,6 @@ const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
-  console.warn(await testWechat('5e64c11a7a189568b8525d27'));
 };
 
 main();
