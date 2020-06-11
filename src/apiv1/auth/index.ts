@@ -37,6 +37,7 @@ export default class UserController {
         sessionKey: session_key,
       });
     }
+    console.warn('[auth/login]', ctx.body);
     return ctx;
   }
   /**
