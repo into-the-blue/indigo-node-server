@@ -75,6 +75,12 @@ class SubscriptionController {
 
   @Post('/subscription')
   async addSubscription(@Body() body: IAddSubBody, @Ctx() ctx: Context) {
+    if (!(await SubscriptionModel.canCreateNewSubscription(ctx.user.userId))) {
+      return response(
+        RESP_CODES.EXCEED_QUOTA,
+        'cannot create more subscriptions'
+      );
+    }
     const sub = new SubscriptionModel({
       ...body,
       userId: ctx.user.userId,

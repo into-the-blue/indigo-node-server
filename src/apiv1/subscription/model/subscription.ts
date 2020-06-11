@@ -438,4 +438,21 @@ export class SubscriptionModel {
     ).toArray();
     return notificationRecords.map(toCamelCase);
   };
+
+  static canCreateNewSubscription = async (userId: string) => {
+    const _userId = new ObjectId(userId);
+    const memberInfo = await Mongo.DAO.MemberInfo.findOne({
+      where: {
+        user_id: _userId,
+      },
+    });
+    if (!memberInfo) return false;
+    const subs = await Mongo.DAO.Subscription.find({
+      where: {
+        user_id: _userId,
+        deleted: false,
+      },
+    });
+    return memberInfo.subscriptionQuota > subs.length;
+  };
 }

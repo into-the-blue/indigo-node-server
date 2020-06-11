@@ -8,6 +8,7 @@ export enum RESP_CODES {
   NOT_FOUND = 404,
   MEMBER_CANNOT_BUY_A_INFERIOR_MEMBERSHIP = 301,
   MEMBER_EXCEED_FREE_MEMBERSHIP_QUOTA = 302,
+  EXCEED_QUOTA = 303,
 }
 const RESPONSE_MESSAGES = {
   [RESP_CODES.OK]: 'ok',
@@ -19,6 +20,7 @@ const RESPONSE_MESSAGES = {
     'cannot buy a inferior membership',
   [RESP_CODES.MEMBER_EXCEED_FREE_MEMBERSHIP_QUOTA]:
     'exceed free membership quota',
+  [RESP_CODES.EXCEED_QUOTA]: 'exceed quota',
 };
 
 export function response<T>(
