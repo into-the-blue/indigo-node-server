@@ -107,6 +107,8 @@ export class LocationController {
         id: id.toString(),
         address,
         city,
+        name,
+        district,
         coordinates: _coordinates,
         popularity: 0,
       });

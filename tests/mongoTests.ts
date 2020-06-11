@@ -98,7 +98,7 @@ const query1 = async () => {
   console.warn(data);
 };
 
-const query2 = async () => {
+const queryUserSubscriptions = async () => {
   const match = {
     $match: {
       user_id: new ObjectId('5e64c11a7a189568b8525d27'),
@@ -131,10 +131,41 @@ const query2 = async () => {
       as: 'notificationRecords',
     },
   };
+
+  const lookupUnread = {
+    $lookup: {
+      from: 'subscriptionNotificationRecords',
+      let: {
+        s_subscription_id: '$_id',
+      },
+      pipeline: [
+        {
+          $match: {
+            created_at: {
+              $gte: new Date(moment().add(-1, 'month').format('YYYY-MM-DD')),
+            },
+            $expr: {
+              $eq: ['$subscription_id', '$$s_subscription_id'],
+            },
+            viewed: false,
+          },
+        },
+        {
+          $sort: {
+            created_at: -1,
+          },
+        },
+      ],
+      as: 'unreadNotificationRecords',
+    },
+  };
   const project = {
     $project: {
       numOfNotificationRecords: {
         $size: '$notificationRecords',
+      },
+      numOfUnreadNotificationRecords: {
+        $size: '$unreadNotificationRecords',
       },
       type: 1,
       coordiantes: 1,
@@ -151,6 +182,7 @@ const query2 = async () => {
   const data = await Mongo.DAO.Subscription.aggregate([
     match,
     lookup,
+    lookupUnread,
     project,
   ]).toArray();
   console.warn(data);
@@ -204,6 +236,7 @@ const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
+  queryUserSubscriptions();
 };
 
 main();

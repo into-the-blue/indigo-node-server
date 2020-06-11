@@ -5,22 +5,22 @@ import {
   Get,
   Post,
   Ctx,
-} from 'routing-controllers'
-import Koa from 'koa'
-import { Mongo } from '@/db'
-import Axios from 'axios'
-import { WechatMpDecryptor, Jwt, Crypto, response, RESP_CODES } from '@/utils'
+} from 'routing-controllers';
+import Koa from 'koa';
+import { Mongo } from '@/db';
+import Axios from 'axios';
+import { WechatMpDecryptor, Jwt, Crypto, response, RESP_CODES } from '@/utils';
 
-const MP_APP_ID = process.env.INDIGO_MP_APP_ID
-const MP_SECRET = process.env.INDIGO_MP_SECRET
+const MP_APP_ID = process.env.INDIGO_MP_APP_ID;
+const MP_SECRET = process.env.INDIGO_MP_SECRET;
 
 @JsonController()
 export default class UserController {
   @Post('/auth/login')
   async login(@Ctx() ctx: Koa.Context, @Body() body: any) {
-    const { type } = body
+    const { type } = body;
     if (type === 'wechat_mp') {
-      const { code } = body
+      const { code } = body;
       const { data } = await Axios.get(
         'https://api.weixin.qq.com/sns/jscode2session',
         {
@@ -31,13 +31,13 @@ export default class UserController {
             grant_type: 'authorization_code',
           },
         }
-      )
-      const { session_key, openid } = data
+      );
+      const { session_key, openid } = data;
       ctx.body = response(RESP_CODES.OK, undefined, {
         sessionKey: session_key,
-      })
+      });
     }
-    return ctx
+    return ctx;
   }
   /**
    *
@@ -68,15 +68,15 @@ export default class UserController {
     @Ctx() ctx: Koa.Context,
     @Body()
     body: {
-      encryptedData: string
-      iv: string
-      sessionKey: string
+      encryptedData: string;
+      iv: string;
+      sessionKey: string;
     }
   ) {
-    const { encryptedData, iv, sessionKey } = body
+    const { encryptedData, iv, sessionKey } = body;
     try {
-      const decoder = new WechatMpDecryptor(MP_APP_ID, sessionKey)
-      const decodedData = decoder.decryptData(encryptedData, iv)
+      const decoder = new WechatMpDecryptor(MP_APP_ID, sessionKey);
+      const decodedData = decoder.decryptData(encryptedData, iv);
       const {
         avatarUrl,
         city,
@@ -87,13 +87,13 @@ export default class UserController {
         openId,
         province,
         unionId,
-      } = decodedData
+      } = decodedData;
 
       const existed = await Mongo.DAO.User.findOne({
         where: {
           'auth_data.unionId': unionId,
         },
-      })
+      });
 
       const userData = {
         username: nickName,
@@ -104,8 +104,8 @@ export default class UserController {
         province,
         language,
         updated_at: new Date(),
-      }
-      let userId: string
+      };
+      let userId: string;
       if (!existed) {
         userId = (
           await Mongo.DAO.User.insertOne({
@@ -116,9 +116,9 @@ export default class UserController {
             },
             created_at: new Date(),
           })
-        ).insertedId.toString()
+        ).insertedId.toString();
       } else {
-        userId = existed.id.toString()
+        userId = existed.id.toString();
         await Mongo.DAO.User.updateOne(
           {
             'auth_data.unionId': unionId,
@@ -128,7 +128,7 @@ export default class UserController {
               ...userData,
             },
           }
-        )
+        );
       }
       ctx.body = response(RESP_CODES.OK, undefined, {
         userInfo: {
@@ -138,14 +138,15 @@ export default class UserController {
         },
         ...Jwt.generateTokens(userId),
         isNew: !existed,
-      })
+      });
 
-      return ctx
+      return ctx;
     } catch (err) {
-      console.warn(err)
-      ctx.status = 500
-      ctx.message = err.message
-      return ctx
+      console.warn(err);
+      console.warn(body);
+      ctx.status = 500;
+      ctx.message = err.message;
+      return ctx;
     }
   }
 
@@ -154,13 +155,15 @@ export default class UserController {
     @Ctx() ctx: Koa.Context,
     @Body() body: { refreshToken: string }
   ) {
-    const { refreshToken } = body
-    const { err, result } = await Jwt.verify(refreshToken)
+    const { refreshToken } = body;
+    const { err, result } = await Jwt.verify(refreshToken);
     if (err) {
-      ctx.body = response(RESP_CODES.ACCESS_TOKEN_EXPIRED)
-      return ctx
+      ctx.body = response(RESP_CODES.ACCESS_TOKEN_EXPIRED);
+      return ctx;
     }
-    const { userId } = Crypto.decrypt(result['token']) as any
-    return response(RESP_CODES.OK, undefined, { ...Jwt.generateTokens(userId) })
+    const { userId } = Crypto.decrypt(result['token']) as any;
+    return response(RESP_CODES.OK, undefined, {
+      ...Jwt.generateTokens(userId),
+    });
   }
 }

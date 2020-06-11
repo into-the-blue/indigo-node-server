@@ -351,10 +351,40 @@ export class SubscriptionModel {
         as: 'notificationRecords',
       },
     };
+    const lookupUnread = {
+      $lookup: {
+        from: 'subscriptionNotificationRecords',
+        let: {
+          s_subscription_id: '$_id',
+        },
+        pipeline: [
+          {
+            $match: {
+              created_at: {
+                $gte: new Date(moment().add(-1, 'month').format('YYYY-MM-DD')),
+              },
+              $expr: {
+                $eq: ['$subscription_id', '$$s_subscription_id'],
+              },
+              viewed: false,
+            },
+          },
+          {
+            $sort: {
+              created_at: -1,
+            },
+          },
+        ],
+        as: 'unreadNotificationRecords',
+      },
+    };
     const project = {
       $project: {
         numOfNotificationRecords: {
           $size: '$notificationRecords',
+        },
+        numOfUnreadNotificationRecords: {
+          $size: '$unreadNotificationRecords',
         },
         coordinates: 1,
         type: 1,
@@ -371,6 +401,7 @@ export class SubscriptionModel {
     const data = await Mongo.DAO.Subscription.aggregate([
       match,
       lookup,
+      lookupUnread,
       project,
     ]).toArray();
     return data.map(toCamelCase);
