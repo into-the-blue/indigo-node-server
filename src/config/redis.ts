@@ -8,16 +8,11 @@
  * Modified By: Rick yang tongxue(🍔🍔) (origami@timvel.com)
  * -----
  */
-import Redis from 'ioredis'
-import { logger } from '@/utils'
-const client = new Redis({
+
+export const redisDefaultConfig = {
   password: process.env.REDIS_PASSWORD,
   host: process.env.REDIS_HOST,
   port: 6379,
   keyPrefix: 'indigo_node',
   db: 0,
-})
-client.on('error', (error) => {
-  logger.error('redis: ' + JSON.stringify(error))
-})
-export default client
+};

@@ -1,54 +1,54 @@
-import Agenda from 'agenda'
-import { Mongo } from '@/db'
-import Moment from 'moment'
-import { from, empty } from 'rxjs'
-import { map, mergeMap, switchMap } from 'rxjs/operators'
-import { mean } from 'lodash'
-import { ApartmentEntity } from '@/db/entities'
-import { logger, toCamelCase } from '@/utils'
-import { DAO } from '@/db/mongo'
+import Agenda from 'agenda';
+import { Mongo } from '@/db';
+import Moment from 'moment';
+import { from, empty } from 'rxjs';
+import { map, mergeMap, switchMap } from 'rxjs/operators';
+import { mean } from 'lodash';
+import { ApartmentEntity } from '@/db/entities';
+import { logger, toCamelCase } from '@/utils';
+import { sendWechatMessage } from './helper';
 export const CRON_JOBS = {
   computeApartments: 'computeApartments',
   queryApartmentsToCompute: 'queryApartmentsToCompute',
   sendSubscriptionNotification: 'sendSubscriptionNotification',
-}
+};
 
-const RANGE = 500
+const RANGE = 500;
 
 const median = (arr: number[]): number => {
-  const isOdd = arr.length % 2 === 1
-  if (isOdd) return arr[(arr.length + 1) / 2]
-  return +((arr[arr.length / 2] + arr[arr.length / 2 + 1]) / 2).toFixed(2)
-}
+  const isOdd = arr.length % 2 === 1;
+  if (isOdd) return arr[(arr.length + 1) / 2];
+  return +((arr[arr.length / 2] + arr[arr.length / 2 + 1]) / 2).toFixed(2);
+};
 
 const compute = (apts: ApartmentEntity[], target: ApartmentEntity) => {
-  const total = apts.length
+  const total = apts.length;
   const prices = apts
     .map((a) => a.price)
     .concat(target.price)
-    .sort((a, b) => a - b)
+    .sort((a, b) => a - b);
   const PPSM = apts
     .map((a) => a.pricePerSquareMeter)
     .concat(target.pricePerSquareMeter)
-    .sort((a, b) => a - b)
+    .sort((a, b) => a - b);
   const areas = apts
     .map((a) => a.area)
     .concat(target.area)
-    .sort((a, b) => a - b)
-  const averagePrice = +mean(prices).toFixed(2)
-  const averagePPSM = +mean(PPSM).toFixed(2)
-  const averageArea = +mean(areas).toFixed(2)
-  const rankingOfPPSM = PPSM.indexOf(target.pricePerSquareMeter)
-  const rankingOfPrice = prices.indexOf(target.price)
-  const rankingOfArea = areas.indexOf(target.area)
+    .sort((a, b) => a - b);
+  const averagePrice = +mean(prices).toFixed(2);
+  const averagePPSM = +mean(PPSM).toFixed(2);
+  const averageArea = +mean(areas).toFixed(2);
+  const rankingOfPPSM = PPSM.indexOf(target.pricePerSquareMeter);
+  const rankingOfPrice = prices.indexOf(target.price);
+  const rankingOfArea = areas.indexOf(target.area);
 
-  const medianPPSM = median(PPSM)
-  const medianPrice = median(prices)
-  const medianArea = median(areas)
+  const medianPPSM = median(PPSM);
+  const medianPrice = median(prices);
+  const medianArea = median(areas);
 
   const lowestPPSM = (apts.find((a) => a.pricePerSquareMeter === PPSM[0]) || {})
-    .id
-  const lowestPrice = (apts.find((a) => a.price === prices[0]) || {}).id
+    .id;
+  const lowestPrice = (apts.find((a) => a.price === prices[0]) || {}).id;
   return {
     updatedAt: new Date(),
     averagePrice,
@@ -63,8 +63,8 @@ const compute = (apts: ApartmentEntity[], target: ApartmentEntity) => {
     lowestPPSM,
     lowestPrice,
     total,
-  }
-}
+  };
+};
 
 const findApartmentsNearby = (coordinates: number[], range: number) =>
   Mongo.DAO.Apartment.aggregate([
@@ -88,18 +88,18 @@ const findApartmentsNearby = (coordinates: number[], range: number) =>
         distance: 1,
       },
     },
-  ]).toArray()
+  ]).toArray();
 
 const computeSingleApartment = (apartment: ApartmentEntity) =>
   from(findApartmentsNearby(apartment.coordinates, RANGE)).pipe(
     map((apts) => apts.map(toCamelCase)),
     map((apts) => {
-      if (!apts.length) return null
-      const res = compute(apts, apartment)
+      if (!apts.length) return null;
+      const res = compute(apts, apartment);
       return {
         ...res,
         range: RANGE,
-      }
+      };
     }),
     switchMap((computed) =>
       computed
@@ -114,7 +114,7 @@ const computeSingleApartment = (apartment: ApartmentEntity) =>
           )
         : empty()
     )
-  )
+  );
 
 const findApartmentsToCompute = (
   limit: number = 1000
@@ -142,12 +142,12 @@ const findApartmentsToCompute = (
         },
       ],
     },
-  }
+  };
   const sort = {
     $sort: {
       updated_time: -1,
     },
-  }
+  };
   const project = {
     $project: {
       area: 1,
@@ -156,14 +156,14 @@ const findApartmentsToCompute = (
       updated_time: 1,
       coordinates: 1,
     },
-  }
+  };
   return Mongo.DAO.Apartment.aggregate([
     match,
     sort,
     project,
     { $limit: limit },
-  ]).toArray()
-}
+  ]).toArray();
+};
 
 export default (agenda: Agenda) => {
   agenda.define(CRON_JOBS.sendSubscriptionNotification, async (job, done) => {
@@ -181,45 +181,50 @@ export default (agenda: Agenda) => {
       area,
       house_type,
       distance,
-    } = job.attrs.data
-    console.warn(CRON_JOBS.sendSubscriptionNotification, new Date())
-    const user = await DAO.User.findOne(user_id)
-    if (!user) return done(new Error('user not exists'))
-    const { email, phoneNumber } = user
-    const message = `您订阅的${address}附近${distance}米发现新房源了,快来查看吧~`
+    } = job.attrs.data;
+    console.warn(CRON_JOBS.sendSubscriptionNotification, new Date());
+    const user = await Mongo.DAO.User.findOne(user_id);
+    if (!user) return done(new Error('user not exists'));
+    const { email, phoneNumber } = user;
+    const message = `附近${Math.round(
+      +distance
+    )}米: ${house_type} ${price}¥ ${area}㎡`;
     if (wechat_notify_enable) {
-      console.warn('send wechat')
+      logger.info('[sendSubscriptionNotification] [wechat]');
       // send wechat notificaton
+      sendWechatMessage(user.authData.openId, message).catch((err) => {
+        logger.error('[sendSubscriptionNotification] [wechat] ', err);
+      });
     }
     if (email_notify_enable) {
-      console.warn('send email')
+      logger.info('[sendSubscriptionNotification] [email]');
       // send email notification
     }
     if (sms_notify_enable) {
-      console.warn('send sms')
+      logger.info('[sendSubscriptionNotification] [sms]');
       // send sms notification
     }
 
-    done()
-  })
+    done();
+  });
 
   agenda.define(CRON_JOBS.computeApartments, (job, done) => {
-    const { apartment } = job.attrs.data
+    const { apartment } = job.attrs.data;
     // logger.info('START JOB ' + CRON_JOBS.computeApartments)
     computeSingleApartment(apartment).subscribe({
       error: (err) => {
-        logger.error(err)
-        done(err)
+        logger.error(err);
+        done(err);
       },
       complete: () => {
         // logger.info('DONE ' + CRON_JOBS.computeApartments)
-        done()
+        done();
       },
-    })
-  })
+    });
+  });
 
   agenda.define(CRON_JOBS.queryApartmentsToCompute, (job, done) => {
-    logger.info('START JOB ' + CRON_JOBS.queryApartmentsToCompute)
+    logger.info('START JOB ' + CRON_JOBS.queryApartmentsToCompute);
     from(findApartmentsToCompute())
       .pipe(
         switchMap((d) => from(d)),
@@ -232,13 +237,13 @@ export default (agenda: Agenda) => {
       )
       .subscribe({
         error: (err) => {
-          logger.error(err)
-          done(err)
+          logger.error(err);
+          done(err);
         },
         complete: () => {
-          logger.info('DONE ' + CRON_JOBS.queryApartmentsToCompute)
-          done()
+          logger.info('DONE ' + CRON_JOBS.queryApartmentsToCompute);
+          done();
         },
-      })
-  })
-}
+      });
+  });
+};

@@ -1,19 +1,19 @@
 import {
   RateLimiterRedis,
   IRateLimiterStoreOptions,
-} from 'rate-limiter-flexible'
-import { redis } from '@/config'
+} from 'rate-limiter-flexible';
+import { redisClient } from '@/db';
 
 const defaultOptions: IRateLimiterStoreOptions = {
-  storeClient: redis,
+  storeClient: redisClient,
   keyPrefix: 'rateLimiter',
   points: 5,
   duration: 1,
-}
+};
 const createRateLimiter = (options?: IRateLimiterStoreOptions) => {
   return new RateLimiterRedis({
     ...defaultOptions,
     ...options,
-  })
-}
-export { createRateLimiter }
+  });
+};
+export { createRateLimiter };

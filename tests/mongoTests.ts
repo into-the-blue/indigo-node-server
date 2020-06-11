@@ -4,7 +4,8 @@ require('dotenv').config({
   path: Path.join(__dirname, '..', '.env'),
 });
 require('module-alias/register');
-import { Mongo } from '../src/db';
+import { Mongo, redisClient } from '../src/db';
+import { WechatClient } from '../src/services/wechat';
 import moment from 'moment';
 import { ObjectId } from 'bson';
 import { Jwt, randomHexString } from '../src/utils';
@@ -170,10 +171,40 @@ const queryMembershipRecords = async () => {
   ]).toArray();
   console.warn(records, records.length);
 };
+
+const getWechatAccessToken = async () => {
+  const cached = await redisClient.get('wechatAccessToken');
+  if (cached) return cached;
+  const { accessToken, expiresIn } = await WechatClient.getAccessToken();
+  await redisClient.set(
+    'wechatAccessToken',
+    accessToken,
+    'EX',
+    +expiresIn - 100
+  );
+  return accessToken;
+};
+
+const testWechat = async (userId: string = '5e64c11a7a189568b8525d27') => {
+  const accessToken = await getWechatAccessToken();
+  const user = await Mongo.DAO.User.findOne(userId);
+  if (!user) return console.warn('user not exist');
+
+  const message = `${'1室1厅0卫'} ${5000}¥ ${50}㎡`;
+  const openId = user.authData.openId;
+  const res = await WechatClient.sendMessage(accessToken, {
+    openId,
+    page: '/pages/Profile/builder/index',
+    date: moment().format('YYYY-MM-DD HH:MM:SS'),
+    aparmentTitle: message,
+  });
+  console.warn(res);
+};
 const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
+  console.warn(await testWechat('5e64c11a7a189568b8525d27'));
 };
 
 main();

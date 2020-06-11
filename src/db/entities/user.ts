@@ -1,50 +1,53 @@
-import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm'
-import { TRegistrationType } from '@/types'
+import { Entity, ObjectIdColumn, ObjectID, Column } from 'typeorm';
+import { TRegistrationType } from '@/types';
 
 @Entity({ name: 'users' })
 export class UserEntity {
   @ObjectIdColumn({ name: '_id' })
-  id: ObjectID
+  id: ObjectID;
 
   @Column({ type: 'string', nullable: false })
-  username: string
+  username: string;
 
   @Column({ name: 'real_name', type: 'string', default: null })
-  realName
+  realName;
 
   @Column({ type: 'string' })
-  avatar: string
+  avatar: string;
 
   @Column({ name: 'auth_data', default: null })
-  authData: object
+  authData: {
+    openId: string;
+    unionId: string;
+  };
 
   @Column({ name: 'registration_type', type: 'string', nullable: false })
-  registrationType: TRegistrationType
+  registrationType: TRegistrationType;
 
   @Column({ name: 'phone_number', type: 'string', default: null })
-  phoneNumber: string
+  phoneNumber: string;
 
   @Column({ name: 'gender', type: 'int', default: 2 })
-  gender: number
+  gender: number;
 
   @Column({ type: 'string' })
-  country: string
+  country: string;
 
   @Column({ type: 'string' })
-  province: string
+  province: string;
 
   @Column({ type: 'string' })
-  city: string
+  city: string;
 
   @Column({ type: 'string', default: null })
-  email: string
+  email: string;
 
   @Column({ type: 'string' })
-  language: string
+  language: string;
 
   @Column({ name: 'created_at', type: 'date', default: Date.now() })
-  createdAt: Date
+  createdAt: Date;
 
   @Column({ name: 'updated_at', type: 'date', default: Date.now() })
-  updatedAt: Date
+  updatedAt: Date;
 }
