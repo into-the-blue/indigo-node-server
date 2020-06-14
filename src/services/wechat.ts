@@ -65,7 +65,7 @@ export class WechatClient {
           },
         },
         //developer为开发版；trial为体验版；formal为正式版；默认为正式版
-        miniprogram_state: 'developer',
+        miniprogram_state: 'formal',
       }
     );
     return data;
