@@ -464,8 +464,13 @@ export class SubscriptionModel {
     const $limit = {
       $limit: 100,
     };
+    const $sort = {
+      $sort: {
+        created_at: -1,
+      },
+    };
     const notificationRecords = await Mongo.DAO.SubscriptionNotificationRecord.aggregate(
-      [match, lookupApartment, unwind, project, $skip, $limit]
+      [match, lookupApartment, unwind, project, $skip, $limit, $sort]
     ).toArray();
     return notificationRecords.map(toCamelCase);
   };

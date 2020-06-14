@@ -232,11 +232,75 @@ const testWechat = async (userId: string = '5e64c11a7a189568b8525d27') => {
   });
   console.warn(res);
 };
+
+const querySubscriptionRecords = async (subscriptionId: string) => {
+  const match = {
+    $match: {
+      subscription_id: new ObjectId(subscriptionId),
+      apartment_id: {
+        $exists: true,
+      },
+    },
+  };
+  const lookupApartment = {
+    $lookup: {
+      from: 'apartments',
+      let: {
+        a_id: '$apartment_id',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: ['$_id', '$$a_id'],
+            },
+          },
+        },
+      ],
+      as: 'apartment',
+    },
+  };
+  const unwind = {
+    $unwind: {
+      path: '$apartment',
+      preserveNullAndEmptyArrays: true,
+    },
+  };
+  const project = {
+    $project: {
+      user_id: 1,
+      subscription_id: 1,
+      apartment_id: 1,
+      apartment: { $ifNull: ['$apartment', null] },
+      location_id: 1,
+      created_at: 1,
+      updated_at: 1,
+      feedback: 1,
+      feedback_detail: 1,
+      distance: 1,
+      viewed: 1,
+    },
+  };
+  const $skip = {
+    $skip: 0,
+  };
+  const $limit = {
+    $limit: 100,
+  };
+  const $sort = {
+    $sort: {
+      created_at: -1,
+    },
+  };
+  const notificationRecords = await Mongo.DAO.SubscriptionNotificationRecord.aggregate(
+    [match, lookupApartment, unwind, project, $skip, $limit, $sort]
+  ).toArray();
+  return notificationRecords;
+};
 const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
-  queryUserSubscriptions();
 };
 
 main();
