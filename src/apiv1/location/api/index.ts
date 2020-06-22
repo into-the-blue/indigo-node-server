@@ -67,7 +67,25 @@ export class LocationController {
       value: 'hangzhou',
       defaultCoordinates: [120.023613, 30.279506],
     };
-    return response(RESP_CODES.OK, undefined, [SHANG_HAI]);
+    const GUANG_ZHOU = {
+      name: '广州',
+      value: 'guangzhou',
+      defaultCoordinates: [113.257331, 23.149243],
+    };
+    const NAN_JING = {
+      name: '南京',
+      value: 'nanjing',
+      defaultCoordinates: [118.797499, 32.087104],
+    };
+    return response(RESP_CODES.OK, undefined, [
+      BEI_JING,
+      SHANG_HAI,
+      SU_ZHOU,
+      SHEN_ZHEN,
+      HANG_ZHOU,
+      NAN_JING,
+      GUANG_ZHOU,
+    ]);
   }
 
   @Get('/location/search')
