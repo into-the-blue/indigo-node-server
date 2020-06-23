@@ -1,16 +1,19 @@
 import Agenda from 'agenda';
 import { Mongo } from '@/db';
-import Moment from 'moment';
+import moment from 'moment';
 import { from, empty } from 'rxjs';
 import { map, mergeMap, switchMap } from 'rxjs/operators';
 import { mean } from 'lodash';
 import { ApartmentEntity } from '@/db/entities';
 import { logger, toCamelCase } from '@/utils';
 import { sendWechatMessage } from './helper';
+import { SubscriptionModel } from '@/apiv1/subscription/model/subscription';
+
 export const CRON_JOBS = {
   computeApartments: 'computeApartments',
   queryApartmentsToCompute: 'queryApartmentsToCompute',
   sendSubscriptionNotification: 'sendSubscriptionNotification',
+  checkFailedAptNotification: 'checkFailedAptNotification',
 };
 
 const RANGE = 500;
@@ -116,11 +119,14 @@ const computeSingleApartment = (apartment: ApartmentEntity) =>
     )
   );
 
-const findApartmentsToCompute = (
+const findApartmentsToCompute = async (
   limit: number = 1000
 ): Promise<ApartmentEntity[]> => {
   const match = {
     $match: {
+      created_at: {
+        $gte: moment().add(-31, 'day').toISOString(),
+      },
       coordinates: { $ne: null },
       $and: [
         {
@@ -135,7 +141,7 @@ const findApartmentsToCompute = (
             },
             {
               'computed.updated_at': {
-                $lte: new Date(Moment().add(-25, 'hours').toISOString()),
+                $lte: moment().add(-25, 'hours').toISOString(),
               },
             },
           ],
@@ -155,16 +161,25 @@ const findApartmentsToCompute = (
       price: 1,
       updated_time: 1,
       coordinates: 1,
+      created_at: 1,
     },
   };
-  return Mongo.DAO.Apartment.aggregate([
+  const data = await Mongo.DAO.Apartment.aggregate([
     match,
     sort,
     project,
     { $limit: limit },
   ]).toArray();
+  return data.map(toCamelCase);
 };
 
+const queryAptsOfFailToSendNoti = async () => {
+  return Mongo.DAO.Apartment.find({
+    where: {
+      notification_sent: false,
+    },
+  });
+};
 export default (agenda: Agenda) => {
   agenda.define(CRON_JOBS.sendSubscriptionNotification, async (job, done) => {
     const {
@@ -228,7 +243,6 @@ export default (agenda: Agenda) => {
     from(findApartmentsToCompute())
       .pipe(
         switchMap((d) => from(d)),
-        map(toCamelCase),
         mergeMap((apt) =>
           agenda.now(CRON_JOBS.computeApartments, {
             apartment: apt,
@@ -242,6 +256,24 @@ export default (agenda: Agenda) => {
         },
         complete: () => {
           logger.info('DONE ' + CRON_JOBS.queryApartmentsToCompute);
+          done();
+        },
+      });
+  });
+
+  agenda.define(CRON_JOBS.checkFailedAptNotification, (job, done) => {
+    from(queryAptsOfFailToSendNoti())
+      .pipe(
+        switchMap((data) => from(data)),
+        mergeMap((apt) => SubscriptionModel.notify(apt.id.toString()))
+      )
+      .subscribe({
+        error: (err) => {
+          logger.error(err);
+          done(err);
+        },
+        complete: () => {
+          logger.info('DONE ' + CRON_JOBS.checkFailedAptNotification);
           done();
         },
       });

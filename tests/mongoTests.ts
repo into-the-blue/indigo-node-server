@@ -8,7 +8,8 @@ import { Mongo, redisClient } from '../src/db';
 import { WechatClient } from '../src/services/wechat';
 import moment from 'moment';
 import { ObjectId } from 'bson';
-import { Jwt, randomHexString } from '../src/utils';
+import { Jwt, randomHexString, toCamelCase } from '../src/utils';
+import { ApartmentEntity } from '../src/db/entities';
 
 const query1 = async () => {
   const coordinates = [121.448569, 31.222974];
@@ -296,6 +297,60 @@ const querySubscriptionRecords = async (subscriptionId: string) => {
     [match, lookupApartment, unwind, project, $skip, $limit, $sort]
   ).toArray();
   return notificationRecords;
+};
+
+const findApartmentsToCompute = async (
+  limit: number = 1000
+): Promise<ApartmentEntity[]> => {
+  const match = {
+    $match: {
+      created_at: {
+        $gte: moment().add(-31, 'day').toISOString(),
+      },
+      coordinates: { $ne: null },
+      $and: [
+        {
+          expired: { $ne: true },
+        },
+        {
+          $or: [
+            {
+              computed: {
+                $exists: false,
+              },
+            },
+            {
+              'computed.updated_at': {
+                $lte: moment().add(-25, 'hours').toISOString(),
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+  const sort = {
+    $sort: {
+      updated_time: -1,
+    },
+  };
+  const project = {
+    $project: {
+      area: 1,
+      price_per_square_meter: 1,
+      price: 1,
+      updated_time: 1,
+      coordinates: 1,
+      created_at: 1,
+    },
+  };
+  const data = await Mongo.DAO.Apartment.aggregate([
+    match,
+    sort,
+    project,
+    { $limit: limit },
+  ]).toArray();
+  return data.map(toCamelCase);
 };
 const main = async () => {
   await Mongo.connect().catch((err) => {

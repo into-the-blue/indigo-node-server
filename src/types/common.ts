@@ -216,6 +216,8 @@ export interface IApartment {
 
   // number of notified subscriptions
   notified?: number;
+
+  notificationSent?: boolean;
 }
 
 export interface IMetroLine {

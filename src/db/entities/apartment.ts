@@ -172,6 +172,9 @@ export class ApartmentEntity {
   @Column({ name: 'updated_time', type: 'date' })
   updatedTime: Date;
 
+  @Column({ name: 'notification_sent' })
+  notificationSent: boolean;
+
   @Column({ nullable: true })
   computed: object;
 }
