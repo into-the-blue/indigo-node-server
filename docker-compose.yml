@@ -5,9 +5,7 @@ services:
     container_name: indigo-node-server
     image: meanless/indigo-node
     volumes:
-      - ./src:/apps/node-server/src
       - ./logs:/apps/node-server/logs
-      - ./pm2.config.js:/apps/node-server/pm2.config.js
     ports:
       - '7000:7000'
     restart: always

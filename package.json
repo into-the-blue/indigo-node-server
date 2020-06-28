@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "npm run preRun && npm run clean && npm run build && pm2-runtime pm2.config.js",
-    "start-dev": "npm run preRun && npm run clean && npm run build && node -r dotenv/config  ./dist/app.js",
+    "start": "pm2-runtime pm2.config.js",
+    "start-dev": "node -r dotenv/config  ./dist/app.js",
     "dev": "nodemon  -r dotenv/config --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' ./src/app.ts",
     "build": "tsc",
     "preRun": "node ./scripts/setupModuleAlias.js",
