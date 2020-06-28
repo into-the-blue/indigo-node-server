@@ -25,7 +25,7 @@ import { logger, randomString, isMaster, isDevEnv } from './utils';
 import StartCronJob from './cronJobs';
 import Router from 'koa-router';
 import helmet from 'koa-helmet';
-import {} from 'rate-limiter-flexible';
+import koaLogger from 'koa-logger'
 
 const NOT_FOUND_MSG = 'What are you looking for ?';
 const router = new Router<Koa.DefaultState, Koa.Context>();
@@ -39,6 +39,10 @@ const run = async () => {
   StartCronJob();
 
   const app = new Koa<Koa.DefaultState, Koa.Context>();
+
+  // log
+  app.use(koaLogger());
+
   app.use(helmet());
   app.use(cors());
   app.use(bodyParser());
@@ -49,20 +53,6 @@ const run = async () => {
 
   // passport
   setupPassport(app);
-
-  // log
-  app.use(async (ctx, next) => {
-    const requestId = randomString(10);
-    try {
-      console.time(requestId + ctx.url);
-      await next();
-    } catch (err) {
-      console.warn(err.message);
-      throw err;
-    } finally {
-      console.timeEnd(requestId + ctx.url);
-    }
-  });
 
   // routing controller
   useKoaServer(app, {

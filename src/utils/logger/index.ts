@@ -45,7 +45,7 @@ const genFileTransports = (...opts: FTOpt[]) => {
 export const logger = createLogger({
   format: format.combine(
     format.label({ label: 'INDIGO' }),
-    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' })
+    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' })
   ),
   transports: [
     ...genFileTransports(

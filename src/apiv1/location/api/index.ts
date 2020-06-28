@@ -14,7 +14,7 @@ import { CustomLocationModel } from '../model/customLocation';
 import { Context } from 'koa';
 import { IsString, IsNumber, IsArray } from 'class-validator';
 import { AVAILABLE_CITIES } from '../utils/constants';
-import { redisClient } from '@/db';
+import { redisClient, getCached } from '@/db';
 import { merge, from } from 'rxjs';
 import { filter, map, tap, take } from 'rxjs/operators';
 
@@ -46,25 +46,12 @@ export class LocationController {
 
   @Get('/location/available_cities')
   async availableCitys() {
-    const data = await merge(
-      from(redisClient.get('availableCitys')).pipe(
-        filter((o) => !!o),
-        map((o) => JSON.parse(o))
-      ),
-      from(
-        CustomLocationModel.getCountOfNewApartments(AVAILABLE_CITIES as any)
-      ).pipe(
-        tap((res) => {
-          redisClient
-            .set('availableCitys', JSON.stringify(res), 'EX', 60 * 15)
-            .catch((err) => {
-              logger.error('[availableCitys]', err);
-            });
-        })
-      )
-    )
-      .pipe(take(1))
-      .toPromise();
+    const data = await getCached(
+      'availableCitys',
+      () =>
+        CustomLocationModel.getCountOfNewApartments(AVAILABLE_CITIES as any),
+      60 * 15
+    );
     return response(RESP_CODES.OK, undefined, data);
   }
 

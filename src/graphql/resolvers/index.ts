@@ -1,8 +1,8 @@
-import { Mongo } from '@/db'
-import { logger, toCamelCase } from '@/utils'
-import {} from 'mongodb'
-import { GeographicClient } from '@/services/geographic'
-import { UserInputError } from 'apollo-server-koa'
+import { Mongo, getCached } from '@/db';
+import { logger, toCamelCase } from '@/utils';
+import {} from 'mongodb';
+import { GeographicClient } from '@/services/geographic';
+import { UserInputError } from 'apollo-server-koa';
 
 const _queryApartmeentsNearbyCoordinates = async (
   coordinates: number[],
@@ -15,7 +15,7 @@ const _queryApartmeentsNearbyCoordinates = async (
       coordinates.every((o) => typeof o === 'number')
     )
   ) {
-    throw new UserInputError('Invalid coordinates')
+    throw new UserInputError('Invalid coordinates');
   }
 
   const data = await Mongo.DAO.Apartment.aggregate([
@@ -38,26 +38,26 @@ const _queryApartmeentsNearbyCoordinates = async (
     {
       $limit: limit,
     },
-  ]).toArray()
+  ]).toArray();
 
-  return data.map(toCamelCase)
-}
+  return data.map(toCamelCase);
+};
 
 export const queryApartmentsNearby = async (parent, args, ctx) => {
-  const { id, radius = 500, limit = 50 } = args
-  const apartment = await Mongo.DAO.Apartment.findOne(id)
-  if (!apartment) throw new UserInputError('Not found')
-  const { coordinates } = apartment
-  return _queryApartmeentsNearbyCoordinates(coordinates, radius, limit)
-}
+  const { id, radius = 500, limit = 50 } = args;
+  const apartment = await Mongo.DAO.Apartment.findOne(id);
+  if (!apartment) throw new UserInputError('Not found');
+  const { coordinates } = apartment;
+  return _queryApartmeentsNearbyCoordinates(coordinates, radius, limit);
+};
 
 export const queryApartmentsNearbyCoordinates = async (parent, args, ctx) => {
-  const { coordinates, radius = 500, limit = 50 } = args
-  return _queryApartmeentsNearbyCoordinates(coordinates, radius, limit)
-}
+  const { coordinates, radius = 500, limit = 50 } = args;
+  return _queryApartmeentsNearbyCoordinates(coordinates, radius, limit);
+};
 
 export const queryApartments = async (parent, args, ctx) => {
-  logger.info(parent, args, ctx)
+  logger.info(parent, args, ctx);
   const data = await Mongo.DAO.Apartment.find({
     take: 10,
     where: {
@@ -65,12 +65,12 @@ export const queryApartments = async (parent, args, ctx) => {
         $exists: true,
       },
     },
-  })
-  return data.map(toCamelCase)
-}
+  });
+  return data.map(toCamelCase);
+};
 
 export const queryApartmentsWithLabel = async (parent, args, ctx) => {
-  const { limit = 20 } = args
+  const { limit = 20 } = args;
   const data = await Mongo.DAO.Apartment.aggregate([
     {
       $match: {
@@ -95,12 +95,12 @@ export const queryApartmentsWithLabel = async (parent, args, ctx) => {
     {
       $limit: limit,
     },
-  ]).toArray()
-  return data.map(toCamelCase)
-}
+  ]).toArray();
+  return data.map(toCamelCase);
+};
 // unlabeled data
 export const queryApartmentsWithoutLabel = async (parent, args, ctx) => {
-  const { limit = 20 } = args
+  const { limit = 20 } = args;
   const data = await Mongo.DAO.Apartment.aggregate([
     {
       $match: {
@@ -130,9 +130,9 @@ export const queryApartmentsWithoutLabel = async (parent, args, ctx) => {
     {
       $limit: limit,
     },
-  ]).toArray()
-  return data.map(toCamelCase)
-}
+  ]).toArray();
+  return data.map(toCamelCase);
+};
 
 export const queryStations = async (parent, args, ctx) => {
   const data = await Mongo.DAO.Station.aggregate([
@@ -144,27 +144,33 @@ export const queryStations = async (parent, args, ctx) => {
         as: 'lines',
       },
     },
-  ]).toArray()
-  return data.map(toCamelCase)
-}
+  ]).toArray();
+  return data.map(toCamelCase);
+};
 
 export const queryApartmentsNearbyStation = async (parent, args, ctx) => {
-  const { stationId, radius = 500, limit = 50 } = args
+  const { stationId, radius = 500, limit = 50 } = args;
+
   const data = await Mongo.DAO.Station.findOne({
     where: {
       station_id: stationId,
     },
-  })
-  if (!data) throw new UserInputError('Not found')
-  return _queryApartmeentsNearbyCoordinates(data.coordinates, radius, limit)
-}
+  });
+  if (!data) throw new UserInputError('Not found');
+  return getCached(
+    'queryApartmentsNearbyStation' + stationId + radius,
+    () => _queryApartmeentsNearbyCoordinates(data.coordinates, radius, limit),
+    60 * 30
+  );
+  // return _queryApartmeentsNearbyCoordinates(data.coordinates, radius, limit);
+};
 
 export const queryApartmentsNearbyAddress = async (parent, args, ctx) => {
-  const { address, city, limit, radius } = args
-  const geoInfo = await GeographicClient.decodeAddressAmap(address, city)
+  const { address, city, limit, radius } = args;
+  const geoInfo = await GeographicClient.decodeAddressAmap(address, city);
   // console.warn(geoInfo)
-  if (!+geoInfo.count) throw new UserInputError('Cannot decode this address')
-  const coordinates = geoInfo.geocodes[0].location.split(',').map((l) => +l)
+  if (!+geoInfo.count) throw new UserInputError('Cannot decode this address');
+  const coordinates = geoInfo.geocodes[0].location.split(',').map((l) => +l);
   return {
     coordinates,
     apartments: await _queryApartmeentsNearbyCoordinates(
@@ -172,12 +178,12 @@ export const queryApartmentsNearbyAddress = async (parent, args, ctx) => {
       radius,
       limit
     ),
-  }
-}
+  };
+};
 
 export const queryStationsNearbyCoordinates = async (parent, args, ctx) => {
-  const { coordinates, radius } = args
-  const _radius = Math.min(Math.max(100, radius), 3000)
+  const { coordinates, radius } = args;
+  const _radius = Math.min(Math.max(100, radius), 3000);
   const data = await Mongo.DAO.Station.aggregate([
     {
       $geoNear: {
@@ -198,6 +204,6 @@ export const queryStationsNearbyCoordinates = async (parent, args, ctx) => {
         as: 'lines',
       },
     },
-  ]).toArray()
-  return data.map(toCamelCase)
-}
+  ]).toArray();
+  return data.map(toCamelCase);
+};
