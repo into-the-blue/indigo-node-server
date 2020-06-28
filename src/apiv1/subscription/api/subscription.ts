@@ -151,7 +151,6 @@ class SubscriptionController {
 
       return ctx;
     } catch (err) {
-      console.warn(err);
       throw err;
     }
   }

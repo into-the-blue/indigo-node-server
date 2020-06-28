@@ -13,7 +13,7 @@ import {
   AVAILABLE_MEMBER_SOURCE,
   AVAILABLE_MEMBER_TYPES,
 } from '../utils/constants';
-import { response, RESP_CODES, toCamelCase } from '@/utils';
+import { response, RESP_CODES, toCamelCase, logger } from '@/utils';
 import { MembershipModel } from '../model/membership';
 import {
   ExistingABetterMembership,
@@ -45,7 +45,7 @@ export class MembershipController {
       const memberInfo = await MembershipModel.newMember(userId, type, source);
       return response(RESP_CODES.OK, undefined, memberInfo);
     } catch (err) {
-      console.warn('[newMember]', err);
+      logger.error('[newMember]', err);
       if (err instanceof ExistingABetterMembership) {
         return response(RESP_CODES.MEMBER_CANNOT_BUY_A_INFERIOR_MEMBERSHIP);
       }

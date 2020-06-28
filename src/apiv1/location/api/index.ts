@@ -8,11 +8,15 @@ import {
   InternalServerError,
 } from 'routing-controllers';
 
-import { response, RESP_CODES, toCamelCase } from '@/utils';
+import { response, RESP_CODES, toCamelCase, logger } from '@/utils';
 import { GeographicClient } from '@/services/geographic';
 import { CustomLocationModel } from '../model/customLocation';
 import { Context } from 'koa';
 import { IsString, IsNumber, IsArray } from 'class-validator';
+import { AVAILABLE_CITIES } from '../utils/constants';
+import { redisClient } from '@/db';
+import { merge, from } from 'rxjs';
+import { filter, map, tap, take } from 'rxjs/operators';
 
 class GetLocationQueryParams {
   @IsString()
@@ -41,51 +45,27 @@ export class LocationController {
   }
 
   @Get('/location/available_cities')
-  availableCitys() {
-    const BEI_JING = {
-      name: '北京市',
-      value: 'beijing',
-      defaultCoordinates: [116.397451, 39.909187],
-    };
-    const SHANG_HAI = {
-      name: '上海市',
-      value: 'shanghai',
-      defaultCoordinates: [121.44532, 31.223505],
-    };
-    const SHEN_ZHEN = {
-      name: '深圳',
-      value: 'shenzhen',
-      defaultCoordinates: [114.117751, 22.531948],
-    };
-    const SU_ZHOU = {
-      name: '苏州',
-      value: 'suzhou',
-      defaultCoordinates: [120.610868, 31.329679],
-    };
-    const HANG_ZHOU = {
-      name: '杭州',
-      value: 'hangzhou',
-      defaultCoordinates: [120.023613, 30.279506],
-    };
-    const GUANG_ZHOU = {
-      name: '广州',
-      value: 'guangzhou',
-      defaultCoordinates: [113.257331, 23.149243],
-    };
-    const NAN_JING = {
-      name: '南京',
-      value: 'nanjing',
-      defaultCoordinates: [118.797499, 32.087104],
-    };
-    return response(RESP_CODES.OK, undefined, [
-      BEI_JING,
-      SHANG_HAI,
-      SU_ZHOU,
-      SHEN_ZHEN,
-      HANG_ZHOU,
-      NAN_JING,
-      GUANG_ZHOU,
-    ]);
+  async availableCitys() {
+    const data = await merge(
+      from(redisClient.get('availableCitys')).pipe(
+        filter((o) => !!o),
+        map((o) => JSON.parse(o))
+      ),
+      from(
+        CustomLocationModel.getCountOfNewApartments(AVAILABLE_CITIES as any)
+      ).pipe(
+        tap((res) => {
+          redisClient
+            .set('availableCitys', JSON.stringify(res), 'EX', 60 * 15)
+            .catch((err) => {
+              logger.error('[availableCitys]', err);
+            });
+        })
+      )
+    )
+      .pipe(take(1))
+      .toPromise();
+    return response(RESP_CODES.OK, undefined, data);
   }
 
   @Get('/location/search')
@@ -131,7 +111,7 @@ export class LocationController {
         popularity: 0,
       });
     } catch (err) {
-      console.warn('[createOrGetLocation]', err);
+      logger.error('[createOrGetLocation]', err);
       throw new InternalServerError(err.message);
     }
   }

@@ -141,7 +141,7 @@ const findApartmentsToCompute = async (
             },
             {
               'computed.updated_at': {
-                $lte: moment().add(-25, 'hours').toISOString(),
+                $lte: new Date(moment().add(-25, 'hours').toISOString()),
               },
             },
           ],
@@ -197,7 +197,6 @@ export default (agenda: Agenda) => {
       house_type,
       distance,
     } = job.attrs.data;
-    console.warn(CRON_JOBS.sendSubscriptionNotification, new Date());
     const user = await Mongo.DAO.User.findOne(user_id);
     if (!user) return done(new Error('user not exists'));
     const { email, phoneNumber } = user;

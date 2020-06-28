@@ -321,7 +321,7 @@ const findApartmentsToCompute = async (
             },
             {
               'computed.updated_at': {
-                $lte: moment().add(-25, 'hours').toISOString(),
+                $lte: new Date(moment().add(-25, 'hours').toISOString()),
               },
             },
           ],
@@ -352,10 +352,34 @@ const findApartmentsToCompute = async (
   ]).toArray();
   return data.map(toCamelCase);
 };
+
+const queryNewApartmentsByCity = async () => {
+  const match = {
+    $match: {
+      created_time: {
+        $gte: new Date(moment().add(-1, 'days').toISOString()),
+      },
+    },
+  };
+  const group = {
+    $group: {
+      _id: '$city',
+      count: { $sum: 1 },
+    },
+  };
+  const data = await Mongo.DAO.Apartment.aggregate([match, group]).toArray();
+  return data;
+};
 const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
+  console.warn(await redisClient.get('test'));
+  await redisClient.set('test', JSON.stringify([{ a: 1 }, { b: 2 }]), 'EX', 10);
+  console.warn(
+    await redisClient.get('test'),
+    typeof (await redisClient.get('test'))
+  );
 };
 
 main();

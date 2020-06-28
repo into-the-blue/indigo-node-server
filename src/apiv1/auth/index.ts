@@ -36,9 +36,7 @@ export default class UserController {
       ctx.body = response(RESP_CODES.OK, undefined, {
         sessionKey: session_key,
       });
-      console.warn('[auth/login]', data);
     }
-    console.warn('[auth/login]', ctx.body);
     return ctx;
   }
   /**
@@ -144,8 +142,6 @@ export default class UserController {
 
       return ctx;
     } catch (err) {
-      console.warn(err);
-      console.warn(body);
       ctx.status = 500;
       ctx.message = err.message;
       return ctx;

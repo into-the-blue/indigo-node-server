@@ -34,7 +34,6 @@ export class MembershipModel {
         },
       },
     });
-    console.warn(records);
     return {
       enable: records.length < MAXIMUM_REDEEM_TIMES_PER_MONTH,
       remainingRedeemTimes: MAXIMUM_REDEEM_TIMES_PER_MONTH - records.length,

@@ -150,8 +150,6 @@ export const queryStations = async (parent, args, ctx) => {
 
 export const queryApartmentsNearbyStation = async (parent, args, ctx) => {
   const { stationId, radius = 500, limit = 50 } = args
-  // if (!stationId) throw new UserInputError('Station id is madatory')
-  console.warn(stationId, typeof stationId)
   const data = await Mongo.DAO.Station.findOne({
     where: {
       station_id: stationId,
