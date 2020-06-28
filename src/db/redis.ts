@@ -4,14 +4,14 @@ import { merge, from } from 'rxjs';
 import { map, filter, take, tap } from 'rxjs/operators';
 
 const redisClient = new Redis({
-  password: process.env.REDIS_PASSWORD,
-  host: process.env.REDIS_HOST,
-  port: 6379,
+  // password: process.env.REDIS_PASSWORD,
+  host: 'redis',
+  port: +process.env.REDIS_PORT,
   keyPrefix: 'indigo_node',
   db: 0,
 });
 redisClient.on('error', (error) => {
-  logger.error('[redis]: ' + JSON.stringify(error));
+  logger.error('[redis]: ', error);
 });
 
 export const getCached = <T>(

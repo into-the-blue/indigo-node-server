@@ -13,3 +13,14 @@ services:
       - ./prod.env
     working_dir: /apps/node-server
     command: ['npm', 'run', 'start']
+    
+    networks:
+      internal:
+
+  redis:
+    image: 'redis:latest'
+    networks:
+      internal:
+
+networks: 
+  internal: 

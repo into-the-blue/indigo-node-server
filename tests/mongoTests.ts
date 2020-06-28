@@ -374,12 +374,17 @@ const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
-  console.warn(await redisClient.get('test'));
-  await redisClient.set('test', JSON.stringify([{ a: 1 }, { b: 2 }]), 'EX', 10);
-  console.warn(
-    await redisClient.get('test'),
-    typeof (await redisClient.get('test'))
+  await redisClient.set(
+    'queryApartmentsNearbyStation100021828500',
+    'aaa',
+    'EX',
+    10
   );
+  console.time('aaa');
+  console.log(
+    await redisClient.get('queryApartmentsNearbyStation100021828500')
+  );
+  console.timeEnd('aaa');
 };
 
 main();
