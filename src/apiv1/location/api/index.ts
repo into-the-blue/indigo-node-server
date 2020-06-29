@@ -47,7 +47,7 @@ export class LocationController {
   @Get('/location/available_cities')
   async availableCitys() {
     const data = await getCached(
-      'availableCitys',
+      'api/location/available_cities',
       () =>
         CustomLocationModel.getCountOfNewApartments(AVAILABLE_CITIES as any),
       60 * 15

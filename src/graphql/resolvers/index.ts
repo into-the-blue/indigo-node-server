@@ -1,8 +1,11 @@
-import { Mongo, getCached } from '@/db';
+import { Mongo, getCached, CACHE_KEYS, cache } from '@/db';
 import { logger, toCamelCase } from '@/utils';
 import {} from 'mongodb';
 import { GeographicClient } from '@/services/geographic';
 import { UserInputError } from 'apollo-server-koa';
+import { from } from 'rxjs';
+import { StationEntity } from '@/db/entities';
+import { mergeMap } from 'rxjs/operators';
 
 const _queryApartmeentsNearbyCoordinates = async (
   coordinates: number[],
@@ -158,11 +161,10 @@ export const queryApartmentsNearbyStation = async (parent, args, ctx) => {
   });
   if (!data) throw new UserInputError('Not found');
   return getCached(
-    'queryApartmentsNearbyStation' + stationId + radius,
+    CACHE_KEYS['graphql/queryApartmentsNearbyStation'](stationId, radius),
     () => _queryApartmeentsNearbyCoordinates(data.coordinates, radius, limit),
     60 * 30
   );
-  // return _queryApartmeentsNearbyCoordinates(data.coordinates, radius, limit);
 };
 
 export const queryApartmentsNearbyAddress = async (parent, args, ctx) => {
@@ -181,29 +183,52 @@ export const queryApartmentsNearbyAddress = async (parent, args, ctx) => {
   };
 };
 
+const _queryStationsNearbyCoordinates = async (
+  coordinates: [number, number],
+  radius: number
+): Promise<StationEntity[]> => {
+  return (
+    await Mongo.DAO.Station.aggregate([
+      {
+        $geoNear: {
+          near: { type: 'Point', coordinates: coordinates },
+          distanceField: 'distance',
+          minDistance: 0,
+          maxDistance: radius,
+          query: { expired: { $ne: true } },
+          key: 'coordinates',
+          spherical: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'lines',
+          foreignField: 'line_id',
+          localField: 'line_ids',
+          as: 'lines',
+        },
+      },
+    ]).toArray()
+  ).map(toCamelCase);
+};
 export const queryStationsNearbyCoordinates = async (parent, args, ctx) => {
   const { coordinates, radius } = args;
   const _radius = Math.min(Math.max(100, radius), 3000);
-  const data = await Mongo.DAO.Station.aggregate([
-    {
-      $geoNear: {
-        near: { type: 'Point', coordinates: coordinates },
-        distanceField: 'distance',
-        minDistance: 0,
-        maxDistance: _radius,
-        query: { expired: { $ne: true } },
-        key: 'coordinates',
-        spherical: true,
-      },
-    },
-    {
-      $lookup: {
-        from: 'lines',
-        foreignField: 'line_id',
-        localField: 'line_ids',
-        as: 'lines',
-      },
-    },
-  ]).toArray();
-  return data.map(toCamelCase);
+  const data = await _queryStationsNearbyCoordinates(coordinates, _radius);
+  from(data)
+    .pipe(
+      mergeMap((station) =>
+        cache(
+          CACHE_KEYS['graphql/queryApartmentsNearbyStation'](
+            station.stationId,
+            500
+          ),
+          () => _queryApartmeentsNearbyCoordinates(station.coordinates, 500, 50)
+        )
+      )
+    )
+    .subscribe({
+      error: () => {},
+    });
+  return data;
 };

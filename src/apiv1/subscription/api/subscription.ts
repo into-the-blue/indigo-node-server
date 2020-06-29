@@ -11,7 +11,7 @@ import {
   InternalServerError,
   QueryParam,
 } from 'routing-controllers';
-import { Mongo } from '@/db';
+import { Mongo, cache, CACHE_KEYS, getCached } from '@/db';
 import { SubscriptionModel } from '../model/subscription';
 import { Context } from 'koa';
 import { SubscriptionInvalidValue } from '../utils/errors';
@@ -20,6 +20,8 @@ import { toCamelCase, RESP_CODES, response, logger } from '@/utils';
 import { ObjectId } from 'bson';
 import moment from 'moment';
 import { IsArray } from 'class-validator';
+import { from } from 'rxjs';
+import { mergeMap } from 'rxjs/operators';
 
 type IAddSubBody = {
   coordinates: [number, number];
@@ -79,9 +81,9 @@ class SubscriptionController {
   ) {
     const { id, skip } = query;
 
-    const records = await SubscriptionModel.findSubscriptionNotificationRecords(
-      id,
-      skip
+    const records = await getCached(
+      CACHE_KEYS['api/subscription/querySubscription'](id),
+      () => SubscriptionModel.findSubscriptionNotificationRecords(id, skip)
     );
     return response(RESP_CODES.OK, undefined, records);
   }
@@ -99,6 +101,27 @@ class SubscriptionController {
         userId,
         _coordinates ? { coordinates: _coordinates } : undefined
       );
+      // cache subscription notification records
+      from(data)
+        .pipe(
+          mergeMap((item) =>
+            cache(
+              CACHE_KEYS['api/subscription/querySubscription'](
+                item.id.toString()
+              ),
+              () =>
+                SubscriptionModel.findSubscriptionNotificationRecords(
+                  item.id.toString(),
+                  0
+                ),
+              60 * 30
+            )
+          )
+        )
+        .subscribe({
+          error: () => {},
+        });
+      // cache end
       return response(RESP_CODES.OK, undefined, data);
     } catch (err) {
       logger.error(err);
