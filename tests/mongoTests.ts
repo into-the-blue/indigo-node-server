@@ -4,12 +4,15 @@ require('dotenv').config({
   path: Path.join(__dirname, '..', '.env'),
 });
 require('module-alias/register');
-import { Mongo, redisClient } from '../src/db';
+import { Mongo } from '../src/db';
 import { WechatClient } from '../src/services/wechat';
 import moment from 'moment';
 import { ObjectId } from 'bson';
 import { Jwt, randomHexString, toCamelCase } from '../src/utils';
-import { ApartmentEntity } from '../src/db/entities';
+import {
+  ApartmentEntity,
+  SubscriptionNotificationRecordEntity,
+} from '../src/db/entities';
 
 const query1 = async () => {
   const coordinates = [121.448569, 31.222974];
@@ -206,97 +209,32 @@ const queryMembershipRecords = async () => {
 };
 
 const getWechatAccessToken = async () => {
-  const cached = await redisClient.get('wechatAccessToken');
-  if (cached) return cached;
-  const { accessToken, expiresIn } = await WechatClient.getAccessToken();
-  await redisClient.set(
-    'wechatAccessToken',
-    accessToken,
-    'EX',
-    +expiresIn - 100
-  );
-  return accessToken;
+  // const cached = await redisClient.get('wechatAccessToken');
+  // if (cached) return cached;
+  // const { accessToken, expiresIn } = await WechatClient.getAccessToken();
+  // await redisClient.set(
+  //   'wechatAccessToken',
+  //   accessToken,
+  //   'EX',
+  //   +expiresIn - 100
+  // );
+  // return accessToken;
 };
 
 const testWechat = async (userId: string = '5e64c11a7a189568b8525d27') => {
-  const accessToken = await getWechatAccessToken();
-  const user = await Mongo.DAO.User.findOne(userId);
-  if (!user) return console.warn('user not exist');
+  // const accessToken = await getWechatAccessToken();
+  // const user = await Mongo.DAO.User.findOne(userId);
+  // if (!user) return console.warn('user not exist');
 
-  const message = `${'1室1厅0卫'} ${5000}¥ ${50}㎡`;
-  const openId = user.authData.openId;
-  const res = await WechatClient.sendMessage(accessToken, {
-    openId,
-    page: '/pages/Profile/builder/index',
-    date: moment().format('YYYY-MM-DD HH:MM:SS'),
-    aparmentTitle: message,
-  });
-  console.warn(res);
-};
-
-const querySubscriptionRecords = async (subscriptionId: string) => {
-  const match = {
-    $match: {
-      subscription_id: new ObjectId(subscriptionId),
-      apartment_id: {
-        $exists: true,
-      },
-    },
-  };
-  const lookupApartment = {
-    $lookup: {
-      from: 'apartments',
-      let: {
-        a_id: '$apartment_id',
-      },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $eq: ['$_id', '$$a_id'],
-            },
-          },
-        },
-      ],
-      as: 'apartment',
-    },
-  };
-  const unwind = {
-    $unwind: {
-      path: '$apartment',
-      preserveNullAndEmptyArrays: true,
-    },
-  };
-  const project = {
-    $project: {
-      user_id: 1,
-      subscription_id: 1,
-      apartment_id: 1,
-      apartment: { $ifNull: ['$apartment', null] },
-      location_id: 1,
-      created_at: 1,
-      updated_at: 1,
-      feedback: 1,
-      feedback_detail: 1,
-      distance: 1,
-      viewed: 1,
-    },
-  };
-  const $skip = {
-    $skip: 0,
-  };
-  const $limit = {
-    $limit: 100,
-  };
-  const $sort = {
-    $sort: {
-      created_at: -1,
-    },
-  };
-  const notificationRecords = await Mongo.DAO.SubscriptionNotificationRecord.aggregate(
-    [match, lookupApartment, unwind, project, $skip, $limit, $sort]
-  ).toArray();
-  return notificationRecords;
+  // const message = `${'1室1厅0卫'} ${5000}¥ ${50}㎡`;
+  // const openId = user.authData.openId;
+  // const res = await WechatClient.sendMessage(accessToken, {
+  //   openId,
+  //   page: '/pages/Profile/builder/index',
+  //   date: moment().format('YYYY-MM-DD HH:MM:SS'),
+  //   aparmentTitle: message,
+  // });
+  // console.warn(res);
 };
 
 const findApartmentsToCompute = async (
@@ -370,21 +308,82 @@ const queryNewApartmentsByCity = async () => {
   const data = await Mongo.DAO.Apartment.aggregate([match, group]).toArray();
   return data;
 };
+
+const findSubscriptionNotificationRecords = async (
+  subscriptionId: string,
+  skip: number = 0
+): Promise<SubscriptionNotificationRecordEntity[]> => {
+  const match = {
+    $match: {
+      subscription_id: new ObjectId(subscriptionId),
+      apartment_id: {
+        $exists: true,
+      },
+    },
+  };
+  const lookupApartment = {
+    $lookup: {
+      from: 'apartments',
+      let: {
+        a_id: '$apartment_id',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: ['$_id', '$$a_id'],
+            },
+          },
+        },
+      ],
+      as: 'apartment',
+    },
+  };
+  const unwind = {
+    $unwind: {
+      path: '$apartment',
+      preserveNullAndEmptyArrays: true,
+    },
+  };
+  const project = {
+    $project: {
+      user_id: 1,
+      subscription_id: 1,
+      apartment_id: 1,
+      apartment: { $ifNull: ['$apartment', null] },
+      location_id: 1,
+      created_at: 1,
+      updated_at: 1,
+      feedback: 1,
+      feedback_detail: 1,
+      distance: 1,
+      viewed: 1,
+    },
+  };
+  const $skip = {
+    $skip: +skip || 0,
+  };
+  const $limit = {
+    $limit: 100,
+  };
+  const $sort = {
+    $sort: {
+      'apartment.created_at': -1,
+    },
+  };
+  const notificationRecords = await Mongo.DAO.SubscriptionNotificationRecord.aggregate(
+    [match, lookupApartment, unwind, project, $skip, $limit, $sort]
+  ).toArray();
+  return notificationRecords.map(toCamelCase);
+};
 const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
-  await redisClient.set(
-    'queryApartmentsNearbyStation100021828500',
-    'aaa',
-    'EX',
-    10
+  const res = await findSubscriptionNotificationRecords(
+    '5eaa320213731cee4083e58e'
   );
-  console.time('aaa');
-  console.log(
-    await redisClient.get('queryApartmentsNearbyStation100021828500')
-  );
-  console.timeEnd('aaa');
+  console.warn(res.map((o) => o['apartment'].createdAt));
 };
 
 main();

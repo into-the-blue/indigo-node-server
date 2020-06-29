@@ -409,7 +409,7 @@ export class SubscriptionModel {
 
   static findSubscriptionNotificationRecords = async (
     subscriptionId: string,
-    skip?: number
+    skip: number = 0
   ): Promise<SubscriptionNotificationRecordEntity[]> => {
     const match = {
       $match: {
@@ -459,7 +459,7 @@ export class SubscriptionModel {
       },
     };
     const $skip = {
-      $skip: +skip || 0,
+      $skip: +skip,
     };
     const $limit = {
       $limit: 100,

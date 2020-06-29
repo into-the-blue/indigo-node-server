@@ -35,7 +35,7 @@ const _queryApartmeentsNearbyCoordinates = async (
     },
     {
       $sort: {
-        created_time: -1,
+        created_at: -1,
       },
     },
     {
