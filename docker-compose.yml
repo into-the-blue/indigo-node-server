@@ -18,10 +18,7 @@ services:
       internal:
 
   redis:
-    image: 'redis:latest'
-    sysctls:
-      - vm.overcommit_memory=1
-      - net.core.somaxconn=511
+    build: ./docker/redis
     networks:
       internal:
 
