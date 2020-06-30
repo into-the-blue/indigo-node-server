@@ -1,4 +1,4 @@
-version: '3'
+version: '3.7'
 services:
   node-server:
     build: .
@@ -13,14 +13,19 @@ services:
       - ./prod.env
     working_dir: /apps/node-server
     command: ['npm', 'run', 'start']
-    
+
     networks:
       internal:
 
   redis:
     build: ./docker/redis
+    image: indigo-node-redis
+    privileged: true
+    sysctls:
+      - vm.overcommit_memory=1
+      - net.core.somaxconn=511
     networks:
       internal:
 
-networks: 
-  internal: 
+networks:
+  internal:
