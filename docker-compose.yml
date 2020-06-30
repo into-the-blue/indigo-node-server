@@ -20,10 +20,8 @@ services:
   redis:
     build: ./docker/redis
     image: indigo-node-redis
-    privileged: true
     sysctls:
-      # - vm.overcommit_memory=1
-      - net.core.somaxconn=511
+      - net.core.somaxconn=1024
     networks:
       internal:
 
