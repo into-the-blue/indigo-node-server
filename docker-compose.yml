@@ -3,7 +3,7 @@ services:
   node-server:
     build: .
     container_name: indigo-node-server
-    image: indigo-node
+    image: registry.cn-hangzhou.aliyuncs.com/timvel/indigo-node
     volumes:
       - ./logs:/apps/node-server/logs
     ports:
