@@ -225,7 +225,6 @@ const testWechat = async (userId: string = '5e64c11a7a189568b8525d27') => {
   // const accessToken = await getWechatAccessToken();
   // const user = await Mongo.DAO.User.findOne(userId);
   // if (!user) return console.warn('user not exist');
-
   // const message = `${'1室1厅0卫'} ${5000}¥ ${50}㎡`;
   // const openId = user.authData.openId;
   // const res = await WechatClient.sendMessage(accessToken, {
@@ -376,14 +375,43 @@ const findSubscriptionNotificationRecords = async (
   ).toArray();
   return notificationRecords.map(toCamelCase);
 };
+
+const findApartmentsNearby = (coordinates: number[], range: number) =>
+  Mongo.DAO.Apartment.aggregate([
+    {
+      $geoNear: {
+        near: { type: 'Point', coordinates: coordinates },
+        distanceField: 'distance',
+        minDistance: 0,
+        maxDistance: range,
+        query: { expired: { $ne: true } },
+        key: 'coordinates',
+        spherical: true,
+      },
+    },
+    {
+      $match: {
+        created_at: {
+          $gte: moment().add(-3, 'month').format('YYYY-MM-DD'),
+        },
+      },
+    },
+    {
+      $project: {
+        area: 1,
+        price_per_square_meter: 1,
+        price: 1,
+        created_at: 1,
+        distance: 1,
+      },
+    },
+  ]).toArray();
 const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
-  const res = await findSubscriptionNotificationRecords(
-    '5eaa320213731cee4083e58e'
-  );
-  console.warn(res.map((o) => o['apartment'].createdAt));
+  const res = await findApartmentsNearby([118.729498, 32.028728], 500);
+  console.warn(res.length);
 };
 
 main();

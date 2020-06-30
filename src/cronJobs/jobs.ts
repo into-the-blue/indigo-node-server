@@ -83,6 +83,13 @@ const findApartmentsNearby = (coordinates: number[], range: number) =>
       },
     },
     {
+      $match: {
+        created_at: {
+          $gte: moment().add(-3, 'month').format('YYYY-MM-DD'),
+        },
+      },
+    },
+    {
       $project: {
         area: 1,
         price_per_square_meter: 1,
@@ -125,7 +132,7 @@ const findApartmentsToCompute = async (
   const match = {
     $match: {
       created_at: {
-        $gte: moment().add(-31, 'day').toISOString(),
+        $gte: moment().add(-31, 'day').format('YYYY-MM-DD'),
       },
       coordinates: { $ne: null },
       $and: [
