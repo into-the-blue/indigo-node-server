@@ -8,22 +8,38 @@ import {
   Authorized,
   UseBefore,
   NotFoundError,
-} from 'routing-controllers'
-import Koa from 'koa'
-import { Mongo } from '@/db'
-import { response, RESP_CODES, toCamelCase } from '@/utils'
-import { ObjectId } from 'bson'
+} from 'routing-controllers';
+import Koa from 'koa';
+import { Mongo } from '@/db';
+import { response, RESP_CODES, toCamelCase } from '@/utils';
+import { ObjectId } from 'bson';
 @Authorized()
 @JsonController()
 export default class UserController {
+  @Post('/users/grant_wechat_message')
+  async grantWechatMessage(@Ctx() ctx: Koa.Context) {
+    const { userId } = ctx.user;
+    await Mongo.DAO.User.updateOne(
+      {
+        _id: new ObjectId(userId),
+      },
+      {
+        $set: {
+          wechat_message_enable: true,
+        },
+      }
+    );
+    return response(RESP_CODES.OK);
+  }
+
   @Get('/users/info')
   async getUserInfo(@Ctx() ctx: Koa.Context) {
-    const { userId } = ctx.user
+    const { userId } = ctx.user;
     const match = {
       $match: {
         _id: new ObjectId(userId),
       },
-    }
+    };
     const lookup = {
       $lookup: {
         from: 'memberInfos',
@@ -31,13 +47,13 @@ export default class UserController {
         foreignField: 'user_id',
         as: 'memberInfo',
       },
-    }
+    };
     const unwind = {
       $unwind: {
         path: '$memberInfo',
         preserveNullAndEmptyArrays: true,
       },
-    }
+    };
     const project = {
       $project: {
         _id: 0,
@@ -53,14 +69,15 @@ export default class UserController {
         language: 1,
         created_at: 1,
         updated_at: 1,
+        wechat_message_enable: 1,
         memberInfo: { $ifNull: ['$memberInfo', null] },
       },
-    }
+    };
     const user = (
       await Mongo.DAO.User.aggregate([match, lookup, unwind, project]).toArray()
-    )[0]
-    if (!user) throw new NotFoundError()
-    ctx.body = response(RESP_CODES.OK, undefined, toCamelCase(user))
-    return ctx
+    )[0];
+    if (!user) throw new NotFoundError();
+    ctx.body = response(RESP_CODES.OK, undefined, toCamelCase(user));
+    return ctx;
   }
 }

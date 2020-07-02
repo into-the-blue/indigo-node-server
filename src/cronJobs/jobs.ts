@@ -213,9 +213,25 @@ export default (agenda: Agenda) => {
     if (wechat_notify_enable) {
       logger.info('[sendSubscriptionNotification] [wechat]');
       // send wechat notificaton
-      sendWechatMessage(user.authData.openId, message).catch((err) => {
+      const success = await sendWechatMessage(
+        user.authData.openId,
+        message
+      ).catch((err) => {
         logger.error('[sendSubscriptionNotification] [wechat] ', err);
+        return false;
       });
+      if (success) {
+        await Mongo.DAO.User.updateOne(
+          {
+            _id: user.id,
+          },
+          {
+            $set: {
+              wechat_message_enable: false,
+            },
+          }
+        );
+      }
     }
     if (email_notify_enable) {
       logger.info('[sendSubscriptionNotification] [email]');

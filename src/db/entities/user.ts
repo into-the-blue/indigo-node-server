@@ -50,4 +50,7 @@ export class UserEntity {
 
   @Column({ name: 'updated_at', type: 'date', default: Date.now() })
   updatedAt: Date;
+
+  @Column({ name: 'wechat_message_enable' })
+  wechatMessageEnable: boolean;
 }
