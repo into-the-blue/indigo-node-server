@@ -140,7 +140,7 @@ const SPECIFIC_KEYS = ['isApartment'];
 
 const _specificKeyHandler = {
   isApartment: (apartment: ApartmentEntity, condition: TSubCondition) => {
-    return apartment.tags.includes('公寓');
+    return apartment.tags.includes('公寓') === condition.condition;
   },
 };
 

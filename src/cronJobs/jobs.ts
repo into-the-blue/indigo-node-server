@@ -220,7 +220,7 @@ export default (agenda: Agenda) => {
         logger.error('[sendSubscriptionNotification] [wechat] ', err);
         return false;
       });
-      if (success) {
+      if (user.wechatMessageEnable) {
         await Mongo.DAO.User.updateOne(
           {
             _id: user.id,

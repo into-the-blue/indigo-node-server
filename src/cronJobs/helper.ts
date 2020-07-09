@@ -23,5 +23,5 @@ export const sendWechatMessage = async (openId: string, message) => {
     date: moment().format('YYYY-MM-DD HH:MM:SS'),
     aparmentTitle: message,
   });
-  return +res.errCode == 0;
+  return +res.errcode === 0;
 };
