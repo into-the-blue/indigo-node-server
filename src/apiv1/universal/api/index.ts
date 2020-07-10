@@ -59,7 +59,7 @@ export class UniversalController {
             where: {
               status: 'done',
               updated_at: {
-                gte: moment().add(-1, 'hour').toDate(),
+                $gte: moment().add(-1, 'hour').toDate(),
               },
             },
           })
@@ -71,7 +71,7 @@ export class UniversalController {
           await Mongo.DAO.Apartment.find({
             where: {
               updated_time: {
-                gte: moment().add(-1, 'hour').toDate(),
+                $gte: moment().add(-1, 'hour').toDate(),
               },
             },
           })
