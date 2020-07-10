@@ -4,7 +4,6 @@ import {
   Connection,
   getMongoRepository,
 } from 'typeorm';
-import path from 'path';
 import {
   ApartmentEntity,
   LineEntity,
@@ -16,6 +15,7 @@ import {
   MemberTransactionRecordEntity,
   SubscriptionNotificationRecordEntity,
   ApartmentViewHistoryEntity,
+  TaskEntity,
 } from './entities';
 // configurations of mongo db
 const getBaseMongoConfig = (): ConnectionOptions => ({
@@ -47,6 +47,7 @@ export const getMongoOptions = (
       MemberTransactionRecordEntity,
       SubscriptionNotificationRecordEntity,
       ApartmentViewHistoryEntity,
+      TaskEntity,
     ],
     synchronize,
     logging,
@@ -145,5 +146,9 @@ export class DAO {
 
   static get ApartmentViewHistory() {
     return getMongoRepository(ApartmentViewHistoryEntity);
+  }
+
+  static get Task() {
+    return getMongoRepository(TaskEntity);
   }
 }

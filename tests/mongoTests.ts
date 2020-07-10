@@ -13,6 +13,8 @@ import {
   ApartmentEntity,
   SubscriptionNotificationRecordEntity,
 } from '../src/db/entities';
+import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 const query1 = async () => {
   const coordinates = [121.448569, 31.222974];
@@ -406,12 +408,82 @@ const findApartmentsNearby = (coordinates: number[], range: number) =>
       },
     },
   ]).toArray();
+
+const appStatus = async () => {
+  const queryNewUser = async () => {
+    return (
+      await Mongo.DAO.User.find({
+        where: {
+          created_at: {
+            $gte: new Date(moment().format('YYYY-MM-DD')),
+          },
+        },
+      })
+    ).length;
+  };
+
+  const queryIdleTasks = async () => {
+    return (
+      await Mongo.DAO.Task.find({
+        where: {
+          status: 'idle',
+        },
+      })
+    ).length;
+  };
+  const queryCompletedTasksInLastHour = async () => {
+    return (
+      await Mongo.DAO.Task.find({
+        where: {
+          status: 'done',
+          updated_at: {
+            gte: moment().add(-1, 'hour').toDate(),
+          },
+        },
+      })
+    ).length;
+  };
+
+  const queryNewApartments = async () => {
+    return (
+      await Mongo.DAO.Apartment.find({
+        where: {
+          updated_time: {
+            gte: moment().add(-1, 'hour').toDate(),
+          },
+        },
+      })
+    ).length;
+  };
+
+  return forkJoin(
+    queryNewUser(),
+    queryIdleTasks(),
+    queryCompletedTasksInLastHour(),
+    queryNewApartments()
+  )
+    .pipe(
+      map(
+        ([
+          newUsers,
+          numOfIdleTasks,
+          numOfCompletedTasksInLastHour,
+          numOfNewApartmentsInLastHour,
+        ]) => ({
+          newUsers,
+          numOfIdleTasks,
+          numOfCompletedTasksInLastHour,
+          numOfNewApartmentsInLastHour,
+        })
+      )
+    )
+    .toPromise();
+};
 const main = async () => {
   await Mongo.connect().catch((err) => {
     console.warn('connection err', err);
   });
-  const res = await findApartmentsNearby([118.729498, 32.028728], 500);
-  console.warn(res.length);
+  console.warn(await appStatus());
 };
 
 main();

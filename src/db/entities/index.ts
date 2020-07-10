@@ -8,3 +8,4 @@ export * from './memberTransactionRecord';
 export * from './memberInfo';
 export * from './subscriptionNotificationRecord';
 export * from './apartmentViewHistory';
+export * from './task';

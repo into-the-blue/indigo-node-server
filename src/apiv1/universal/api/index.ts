@@ -9,6 +9,10 @@ import {
   NotFoundError,
 } from 'routing-controllers';
 import { response, RESP_CODES } from '@/utils';
+import { Mongo } from '@/db';
+import moment from 'moment';
+import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @JsonController()
 export class UniversalController {
@@ -23,5 +27,82 @@ export class UniversalController {
         height: 225,
       },
     ]);
+  }
+
+  @Get('/universal/status')
+  async getAppStatus() {
+    const appStatus = async () => {
+      const queryNewUser = async () => {
+        return (
+          await Mongo.DAO.User.find({
+            where: {
+              created_at: {
+                $gte: new Date(moment().format('YYYY-MM-DD')),
+              },
+            },
+          })
+        ).length;
+      };
+
+      const queryIdleTasks = async () => {
+        return (
+          await Mongo.DAO.Task.find({
+            where: {
+              status: 'idle',
+            },
+          })
+        ).length;
+      };
+      const queryCompletedTasksInLastHour = async () => {
+        return (
+          await Mongo.DAO.Task.find({
+            where: {
+              status: 'done',
+              updated_at: {
+                gte: moment().add(-1, 'hour').toDate(),
+              },
+            },
+          })
+        ).length;
+      };
+
+      const queryNewApartments = async () => {
+        return (
+          await Mongo.DAO.Apartment.find({
+            where: {
+              updated_time: {
+                gte: moment().add(-1, 'hour').toDate(),
+              },
+            },
+          })
+        ).length;
+      };
+
+      return forkJoin(
+        queryNewUser(),
+        queryIdleTasks(),
+        queryCompletedTasksInLastHour(),
+        queryNewApartments()
+      )
+        .pipe(
+          map(
+            ([
+              newUsers,
+              numOfIdleTasks,
+              numOfCompletedTasksInLastHour,
+              numOfNewApartmentsInLastHour,
+            ]) => ({
+              newUsers,
+              numOfIdleTasks,
+              numOfCompletedTasksInLastHour,
+              numOfNewApartmentsInLastHour,
+            })
+          )
+        )
+        .toPromise();
+    };
+
+    const status = await appStatus();
+    return response(RESP_CODES.OK, undefined, status);
   }
 }
