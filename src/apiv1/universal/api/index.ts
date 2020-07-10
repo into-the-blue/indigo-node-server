@@ -9,7 +9,7 @@ import {
   NotFoundError,
 } from 'routing-controllers';
 import { response, RESP_CODES } from '@/utils';
-import { Mongo } from '@/db';
+import { Mongo, getCached, CACHE_KEYS } from '@/db';
 import moment from 'moment';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -96,13 +96,18 @@ export class UniversalController {
               numOfIdleTasks,
               numOfCompletedTasksInLastHour,
               numOfNewApartmentsInLastHour,
+              date: new Date(),
             })
           )
         )
         .toPromise();
     };
 
-    const status = await appStatus();
+    const status = await getCached(
+      CACHE_KEYS['api/universal/status'],
+      appStatus,
+      3600
+    );
     return response(RESP_CODES.OK, undefined, status);
   }
 }

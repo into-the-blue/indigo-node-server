@@ -9,6 +9,7 @@ export const CACHE_KEYS = {
     'graphql/queryApartmentsNearbyStation' + stationId + radius,
   'api/subscription/querySubscription': (subscriptionId: string) =>
     'api/subscription/querySubscription' + subscriptionId,
+  'api/universal/status': 'api/universal/status',
 };
 
 function cache<T>(key: string, value: () => Promise<T>, timeout?: number);
