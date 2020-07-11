@@ -46,43 +46,76 @@ export class UniversalController {
 
       const queryIdleTasks = async () => {
         return (
-          await Mongo.DAO.Task.find({
-            where: {
-              status: 'idle',
+          await Mongo.DAO.Task.aggregate([
+            {
+              $match: {
+                status: 'idle',
+              },
             },
-          })
-        ).length;
+            {
+              $count: 'count',
+            },
+          ]).toArray()
+        )[0].count;
       };
       const queryCompletedTasksInLastHour = async () => {
         return (
-          await Mongo.DAO.Task.find({
-            where: {
-              status: 'done',
-              updated_at: {
-                $gte: moment().add(-1, 'hour').toDate(),
+          await Mongo.DAO.Task.aggregate([
+            {
+              $match: {
+                status: 'done',
+                updated_at: {
+                  $gte: moment().add(-1, 'hour').toDate(),
+                },
               },
             },
-          })
-        ).length;
+            {
+              $count: 'count',
+            },
+          ]).toArray()
+        )[0].count;
       };
 
       const queryNewApartments = async () => {
         return (
-          await Mongo.DAO.Apartment.find({
-            where: {
-              updated_time: {
-                $gte: moment().add(-1, 'hour').toDate(),
+          await Mongo.DAO.Apartment.aggregate([
+            {
+              $match: {
+                updated_time: {
+                  $gte: moment().add(-1, 'hour').toDate(),
+                },
               },
             },
-          })
-        ).length;
+            {
+              $count: 'count',
+            },
+          ]).toArray()
+        )[0].count;
+      };
+
+      const queryNewTasksInLast6h = async () => {
+        return (
+          await Mongo.DAO.Task.aggregate([
+            {
+              $match: {
+                created_at: {
+                  $gte: moment().add(-6, 'hour').toDate(),
+                },
+              },
+            },
+            {
+              $count: 'count',
+            },
+          ]).toArray()
+        )[0].count;
       };
 
       return forkJoin(
         queryNewUser(),
         queryIdleTasks(),
         queryCompletedTasksInLastHour(),
-        queryNewApartments()
+        queryNewApartments(),
+        queryNewTasksInLast6h()
       )
         .pipe(
           map(
@@ -91,12 +124,13 @@ export class UniversalController {
               numOfIdleTasks,
               numOfCompletedTasksInLastHour,
               numOfNewApartmentsInLastHour,
+              numOfNewTasksInLast6Hour,
             ]) => ({
               newUsers,
               numOfIdleTasks,
               numOfCompletedTasksInLastHour,
               numOfNewApartmentsInLastHour,
-              date: new Date(),
+              numOfNewTasksInLast6Hour,
             })
           )
         )
@@ -106,7 +140,7 @@ export class UniversalController {
     const status = await getCached(
       CACHE_KEYS['api/universal/status'],
       appStatus,
-      3600
+      900
     );
     return response(RESP_CODES.OK, undefined, status);
   }
