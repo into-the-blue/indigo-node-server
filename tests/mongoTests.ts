@@ -260,7 +260,7 @@ const findApartmentsToCompute = async (
             },
             {
               'computed.updated_at': {
-                $lte: new Date(moment().add(-25, 'hours').toISOString()),
+                $lte: moment().add(-25, 'hours').toDate(),
               },
             },
           ],

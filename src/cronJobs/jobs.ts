@@ -2,7 +2,7 @@ import Agenda from 'agenda';
 import { Mongo } from '@/db';
 import moment from 'moment';
 import { from, empty } from 'rxjs';
-import { map, mergeMap, switchMap } from 'rxjs/operators';
+import { map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { mean } from 'lodash';
 import { ApartmentEntity } from '@/db/entities';
 import { logger, toCamelCase } from '@/utils';
@@ -148,7 +148,7 @@ const findApartmentsToCompute = async (
             },
             {
               'computed.updated_at': {
-                $lte: new Date(moment().add(-25, 'hours').toISOString()),
+                $lte: moment().add(-25, 'hours').toDate(),
               },
             },
           ],
@@ -261,9 +261,11 @@ export default (agenda: Agenda) => {
   });
 
   agenda.define(CRON_JOBS.queryApartmentsToCompute, (job, done) => {
-    logger.info('START JOB ' + CRON_JOBS.queryApartmentsToCompute);
     from(findApartmentsToCompute())
       .pipe(
+        tap((data) =>
+          logger.info(`[${CRON_JOBS.queryApartmentsToCompute}] ${data.length}`)
+        ),
         switchMap((d) => from(d)),
         mergeMap((apt) =>
           agenda.now(CRON_JOBS.computeApartments, {
@@ -277,7 +279,6 @@ export default (agenda: Agenda) => {
           done(err);
         },
         complete: () => {
-          logger.info('DONE ' + CRON_JOBS.queryApartmentsToCompute);
           done();
         },
       });
