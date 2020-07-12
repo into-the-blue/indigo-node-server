@@ -12,7 +12,7 @@ import { response, RESP_CODES } from '@/utils';
 import { Mongo, getCached, CACHE_KEYS } from '@/db';
 import moment from 'moment';
 import { forkJoin } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { get } from 'lodash';
 
 @JsonController()
 export class UniversalController {
@@ -45,96 +45,79 @@ export class UniversalController {
       };
 
       const queryIdleTasks = async () => {
-        return (
-          await Mongo.DAO.Task.aggregate([
-            {
-              $match: {
-                status: 'idle',
-              },
+        const res = await Mongo.DAO.Task.aggregate([
+          {
+            $match: {
+              status: 'idle',
             },
-            {
-              $count: 'count',
-            },
-          ]).toArray()
-        )[0].count;
+          },
+          {
+            $count: 'count',
+          },
+        ]).toArray();
+        return get(res, '[0].count', 0);
       };
       const queryCompletedTasksInLastHour = async () => {
-        return (
-          await Mongo.DAO.Task.aggregate([
-            {
-              $match: {
-                status: 'done',
-                updated_at: {
-                  $gte: moment().add(-1, 'hour').toDate(),
-                },
+        const res = await Mongo.DAO.Task.aggregate([
+          {
+            $match: {
+              status: 'done',
+              updated_at: {
+                $gte: moment().add(-1, 'hour').toDate(),
               },
             },
-            {
-              $count: 'count',
-            },
-          ]).toArray()
-        )[0].count;
+          },
+          {
+            $count: 'count',
+          },
+        ]).toArray();
+        return get(res, '[0].count', 0);
       };
 
       const queryNewApartments = async () => {
-        return (
-          await Mongo.DAO.Apartment.aggregate([
-            {
-              $match: {
-                updated_time: {
-                  $gte: moment().add(-1, 'hour').toDate(),
-                },
+        const res = await Mongo.DAO.Apartment.aggregate([
+          {
+            $match: {
+              updated_time: {
+                $gte: moment().add(-1, 'hour').toDate(),
               },
             },
-            {
-              $count: 'count',
+          },
+          {
+            $group: {
+              _id: null,
+              count: {
+                $sum: 1,
+              },
             },
-          ]).toArray()
-        )[0].count;
+          },
+        ]).toArray();
+        return get(res, '[0].count', 0);
       };
 
       const queryNewTasksInLast6h = async () => {
-        return (
-          await Mongo.DAO.Task.aggregate([
-            {
-              $match: {
-                created_at: {
-                  $gte: moment().add(-6, 'hour').toDate(),
-                },
+        const res = await Mongo.DAO.Task.aggregate([
+          {
+            $match: {
+              created_at: {
+                $gte: moment().add(-6, 'hour').toDate(),
               },
             },
-            {
-              $count: 'count',
-            },
-          ]).toArray()
-        )[0].count;
+          },
+          {
+            $count: 'count',
+          },
+        ]).toArray();
+        return get(res, '[0].count', 0);
       };
 
-      return forkJoin(
-        queryNewUser(),
-        queryIdleTasks(),
-        queryCompletedTasksInLastHour(),
-        queryNewApartments(),
-        queryNewTasksInLast6h()
-      )
-        .pipe(
-          map(
-            ([
-              newUsers,
-              numOfIdleTasks,
-              numOfCompletedTasksInLastHour,
-              numOfNewApartmentsInLastHour,
-              numOfNewTasksInLast6Hour,
-            ]) => ({
-              newUsers,
-              numOfIdleTasks,
-              numOfCompletedTasksInLastHour,
-              numOfNewApartmentsInLastHour,
-              numOfNewTasksInLast6Hour,
-            })
-          )
-        )
-        .toPromise();
+      return forkJoin({
+        newUsers: queryNewUser(),
+        numOfIdleTasks: queryIdleTasks(),
+        numOfCompletedTasksInLastHour: queryCompletedTasksInLastHour(),
+        numOfNewApartmentsInLastHour: queryNewApartments(),
+        numOfNewTasksInLast6Hour: queryNewTasksInLast6h(),
+      }).toPromise();
     };
 
     const status = await getCached(
