@@ -12,7 +12,8 @@ export class CustomLocationModel {
   ) => {
     const match = {
       $match: {
-        created_time: {
+        // use updated time instead of created_time
+        updated_time: {
           $gte: new Date(moment().add(-1, 'days').toISOString()),
         },
       },
